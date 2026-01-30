@@ -25,7 +25,7 @@ class CivitatisScraperSemanal(BaseScraper):
         super().__init__()
         self.seen_items = set()
 
-    async def extract_list(self, lista_destinos, output_file, currency_code="COP"):
+    async def extract_list(self, lista_destinos, output_file, currency_code="CLP"):
         await self.init_browser(headless=True) 
         page = await self.context.new_page()
         

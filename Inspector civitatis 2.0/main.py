@@ -8,7 +8,7 @@ from drivers.nomades import NomadesScraper
 
 # --- (Civitatis) ---
 def cargar_destinos_civitatis(paises):
-    with open('destinos_civitatis.json', 'r', encoding='utf-8') as f:
+    with open('Inspector civitatis 2.0\destinos_civitatis.json', 'r', encoding='utf-8') as f:
         todos = json.load(f)
     return [d for d in todos if d['nameCountry'].lower() in [p.lower() for p in paises]]
 
@@ -27,13 +27,19 @@ def parsear_destinos_nomades(ruta):
     return tareas
 
 async def ejecutar_civitatis():
-    PAISES = ["Colombia"] # Configurar
+    PAISES = [
+    "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica", 
+    "Cuba", "Ecuador", "El Salvador", "Guatemala", "Haití", "Honduras", 
+    "México", "Nicaragua", "Panamá", "Paraguay", "Perú", "República Dominicana", 
+    "Uruguay", "Venezuela", "EEUU", "España", "Italia", "Francia", 
+    "Países Bajos", "Reino Unido", "Alemania", "Bélgica", "Portugal", 
+    "Turquia", "Grecia", "Austria", "Japón", "China", "Tailandia", "Australia"] # Configurar
     destinos = cargar_destinos_civitatis(PAISES)
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     #output = f"data/precios_civitatis_{timestamp}.csv"
-    output = f"data/colombia_civitatis_{timestamp}.csv"
-    scraper = CivitatisScraperSemanal()
-    await scraper.extract_list(destinos, output, currency_code="COP")
+    output = f"data/operadores_civitatis_{timestamp}.csv"
+    scraper = CivitatisScraper()
+    await scraper.extract_list(destinos, output, currency_code="CLP")
 
 async def ejecutar_nomades():
     tareas = parsear_destinos_nomades('destinos_nomades.txt')
