@@ -35,11 +35,35 @@ async def ejecutar_civitatis():
     "Países Bajos", "Reino Unido", "Alemania", "Bélgica", "Portugal", 
     "Turquia", "Grecia", "Austria", "Japón", "China", "Tailandia", "Australia"] # Configurar
     destinos = cargar_destinos_civitatis(PAISES)
-    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    #timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     #output = f"data/precios_civitatis_{timestamp}.csv"
-    output = f"data/operadores_civitatis_{timestamp}.csv"
+    #output = f"data/operadores_civitatis_{timestamp}.csv"
+    
+    # IMPORTANTE: Nombre fijo para que GitHub pueda acumular datos
+    output = "data/operadores_civitatis_incremental.csv"
+    
+    # Lógica de Checkpoint: Leer qué URLs ya procesamos
+    urls_procesadas = set()
+    if os.path.exists(output):
+        try:
+            df_existente = pd.read_csv(output)
+            if 'url_fuente' in df_existente.columns:
+                urls_procesadas = set(df_existente['url_fuente'].unique())
+                print(f"✅ Se encontraron {len(urls_procesadas)} destinos ya procesados. Saltando...")
+        except Exception:
+            pass
+
+    # Filtramos la lista de destinos para procesar solo los pendientes
+    destinos_pendientes = [d for d in destinos if f"https://www.civitatis.com/es/{d['url']}/" not in urls_procesadas]
+    
+    if not destinos_pendientes:
+        print("🙌 ¡Todos los destinos ya están scrapeados!")
+        return
+
     scraper = CivitatisScraper()
-    await scraper.extract_list(destinos, output, currency_code="CLP")
+    # Tu scraper ya tiene el método _save_incremental que usa mode='a' (append)
+    # así que esto escribirá línea por línea sin borrar lo anterior.
+    await scraper.extract_list(destinos_pendientes, output, currency_code="CLP")
 
 async def ejecutar_nomades():
     tareas = parsear_destinos_nomades('destinos_nomades.txt')

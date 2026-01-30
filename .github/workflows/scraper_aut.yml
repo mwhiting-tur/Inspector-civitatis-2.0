@@ -32,10 +32,12 @@ jobs:
         run: python main.py 
 
       - name: Guardar cambios (CSV/Excel)
+        # ESTO ES LO MÁS IMPORTANTE:
+        # Se ejecutará aunque el paso anterior haya fallado o dado timeout.
+        if: always() 
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git pull origin main --rebase
-          git add .
-          git commit -m "Actualización de datos manual" || exit 0
+          git add data/*.csv
+          git commit -m "Snapshot parcial de datos (en caso de error)" || exit 0
           git push
