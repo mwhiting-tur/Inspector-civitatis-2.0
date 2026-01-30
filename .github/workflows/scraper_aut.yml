@@ -21,7 +21,9 @@ jobs:
           pip install -r requirements.txt
 
       - name: Instalar navegadores de Playwright
-        run: playwright install chromium --with-deps
+        run: |
+          pip install playwright
+          sudo npx playwright install chromium --with-deps
 
       - name: Ejecutar el script de scraping
         # Es fundamental poner "python" antes del nombre del archivo
