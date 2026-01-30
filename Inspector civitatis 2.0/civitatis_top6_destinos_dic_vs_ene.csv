@@ -1,0 +1,535 @@
+Pais,Ciudad,personas_dic_2025,personas_actual,crecimiento_personas,actividades_dic_2025,actividades_actual,nuevas_actividades
+Argentina,Buenos Aires,299263.0,311179.0,11916.0,152,154,2
+Argentina,Bariloche,50155.0,51752.0,1597.0,64,64,0
+Argentina,Ushuaia,23311.0,24138.0,827.0,65,67,2
+Argentina,El Calafate,46626.0,47441.0,815.0,55,55,0
+Argentina,Mendoza,43139.0,43870.0,731.0,62,62,0
+Argentina,Salta,21671.0,22163.0,492.0,43,42,-1
+Argentina,Puerto Iguazú,16343.0,16818.0,475.0,28,28,0
+Argentina,Mar del Plata,56.0,189.0,133.0,4,4,0
+Argentina,Tigre,1232.0,1279.0,47.0,13,13,0
+Argentina,Puerto Madryn,1641.0,1670.0,29.0,34,34,0
+Argentina,Córdoba,782.0,805.0,23.0,19,19,0
+Argentina,San Martín de los Andes,845.0,868.0,23.0,17,17,0
+Argentina,San Juan Argentina,611.0,627.0,16.0,14,14,0
+Argentina,Villa de Merlo,101.0,115.0,14.0,8,8,0
+Argentina,La Rioja Argentina,236.0,247.0,11.0,19,19,0
+Argentina,San Rafael,570.0,581.0,11.0,9,9,0
+Argentina,Cafayate,871.0,881.0,10.0,10,10,0
+Argentina,Potrerillos ,257.0,266.0,9.0,9,9,0
+Argentina,Posadas,164.0,172.0,8.0,15,15,0
+Argentina,Esquel,125.0,131.0,6.0,12,12,0
+Argentina,Puerto Pirámides,24.0,30.0,6.0,5,5,0
+Argentina,San Miguel de Tucumán,646.0,651.0,5.0,24,24,0
+Argentina,El Chaltén,209.0,214.0,5.0,10,10,0
+Argentina,Barreal,85.0,90.0,5.0,12,12,0
+Argentina,San Antonio de Areco,94.0,99.0,5.0,3,3,0
+Argentina,Villa La Angostura,225.0,228.0,3.0,12,13,1
+Argentina,Neuquén,153.0,156.0,3.0,9,9,0
+Argentina,Los Gigantes,6.0,9.0,3.0,8,8,0
+Argentina,Ituzaingó,6.0,9.0,3.0,3,3,0
+Argentina,Rosario,87.0,89.0,2.0,10,10,0
+Argentina,San Salvador de Jujuy,548.0,550.0,2.0,14,14,0
+Argentina,Villa Carlos Paz,104.0,106.0,2.0,9,9,0
+Argentina,Termas de Río Hondo,164.0,166.0,2.0,9,9,0
+Argentina,Tafí del Valle,2.0,4.0,2.0,4,4,0
+Argentina,Tilcara,105.0,106.0,1.0,8,8,0
+Argentina,Villa Unión,262.0,263.0,1.0,15,15,0
+Argentina,Tunuyán,50.0,50.0,0.0,3,3,0
+Argentina,La Plata,0.0,0.0,0.0,3,3,0
+Argentina,Olavarría,0.0,0.0,0.0,3,3,0
+Argentina,Purmamarca,374.0,374.0,0.0,12,12,0
+Argentina,Las Grutas,10.0,10.0,0.0,5,5,0
+Argentina,Cañuelas,9.0,9.0,0.0,4,4,0
+Argentina,La Falda,15.0,15.0,0.0,4,4,0
+Argentina,San Luis,23.0,23.0,0.0,11,11,0
+Argentina,Potrero de los Funes,7.0,7.0,0.0,11,11,0
+Argentina,Colón,1.0,1.0,0.0,3,3,0
+Argentina,Formosa,13.0,13.0,0.0,7,7,0
+Argentina,Trelew,85.0,85.0,0.0,4,4,0
+Argentina,Reconquista,0.0,0.0,0.0,3,3,0
+Argentina,Comodoro Rivadavia,0.0,0.0,0.0,4,4,0
+Argentina,Cabra Corral,4.0,4.0,0.0,4,4,0
+Argentina,San Lorenzo,36.0,36.0,0.0,5,5,0
+Argentina,Sierra de la Ventana,1.0,1.0,0.0,3,3,0
+Argentina,Resistencia ,3.0,3.0,0.0,5,5,0
+Argentina,San Fernando,62.0,62.0,0.0,6,6,0
+Argentina,Campana,70.0,70.0,0.0,3,3,0
+Argentina,Vaqueros,2.0,2.0,0.0,3,3,0
+Argentina,Carlos Keen,2.0,2.0,0.0,3,3,0
+Argentina,Caviahue,1.0,1.0,0.0,7,7,0
+Argentina,Malargüe,0.0,0.0,0.0,3,3,0
+Argentina,Rawson,7.0,7.0,0.0,3,3,0
+Argentina,Yerba Buena,6.0,6.0,0.0,7,7,0
+Argentina,Juan José Castelli,2.0,2.0,0.0,4,4,0
+Argentina,Tandil,0.0,0.0,0.0,6,6,0
+Argentina,San Isidro,0.0,0.0,0.0,3,3,0
+Argentina,Villa Yacanto,NULL,NULL,NULL,0,0,0
+Argentina,Uribelarrea,NULL,NULL,NULL,0,0,0
+Argentina,Paraná,NULL,NULL,NULL,0,0,0
+Argentina,Concordia,NULL,NULL,NULL,0,0,0
+Argentina,Gualeguaychú,NULL,NULL,NULL,0,0,0
+Argentina,Santa Fe,NULL,NULL,NULL,0,0,0
+Argentina,Mina Clavero,NULL,NULL,NULL,0,0,0
+Argentina,Maipú ,NULL,NULL,NULL,10,10,0
+Argentina,San Clemente Del Tuyú,NULL,NULL,NULL,0,0,0
+Argentina,Capilla del Señor,NULL,NULL,NULL,3,3,0
+Argentina,Colonia Suiza,NULL,NULL,NULL,0,0,0
+Argentina,Dolavon,NULL,NULL,NULL,0,0,0
+Argentina,Tolhuin,NULL,NULL,NULL,0,0,0
+Argentina,Colonia Carlos Pellegrini,NULL,0.0,NULL,0,3,3
+Argentina,Capilla del Monte,NULL,NULL,NULL,0,0,0
+Argentina,Río Gallegos,NULL,NULL,NULL,0,0,0
+Argentina,San Fernando del Valle de Catamarca,NULL,NULL,NULL,0,0,0
+Brasil,Florianópolis,7137.0,7786.0,649.0,39,42,3
+Brasil,Foz de Iguazú,17976.0,18399.0,423.0,42,44,2
+Brasil,Sao Paulo,8333.0,8642.0,309.0,77,77,0
+Brasil,Búzios,8606.0,8879.0,273.0,23,23,0
+Brasil,Balneario Camboriú,1409.0,1676.0,267.0,21,21,0
+Brasil,Recife,855.0,999.0,144.0,13,19,6
+Brasil,Porto de Galinhas,878.0,999.0,121.0,18,21,3
+Brasil,Maceió,569.0,686.0,117.0,23,23,0
+Brasil,Belo Horizonte,260.0,366.0,106.0,18,22,4
+Brasil,Penha,351.0,456.0,105.0,7,7,0
+Brasil,Natal,808.0,899.0,91.0,20,20,0
+Brasil,Fortaleza,916.0,995.0,79.0,27,27,0
+Brasil,Porto Seguro,468.0,541.0,73.0,28,28,0
+Brasil,Angra dos Reis,455.0,520.0,65.0,20,20,0
+Brasil,Arraial do Cabo,803.0,849.0,46.0,15,15,0
+Brasil,Paraty,3320.0,3364.0,44.0,24,23,-1
+Brasil,Bombinhas,194.0,232.0,38.0,9,9,0
+Brasil,Manaos,1096.0,1131.0,35.0,22,22,0
+Brasil,Maragogi,378.0,412.0,34.0,11,11,0
+Brasil,Cabo Frío,187.0,221.0,34.0,11,11,0
+Brasil,Canela,330.0,363.0,33.0,27,27,0
+Brasil,Jericoacoara,460.0,490.0,30.0,15,15,0
+Brasil,Brasilia,1112.0,1140.0,28.0,14,14,0
+Brasil,Ilha Grande,687.0,706.0,19.0,15,14,-1
+Brasil,Fernando de Noronha,135.0,153.0,18.0,24,24,0
+Brasil,Curitiba ,272.0,288.0,16.0,25,25,0
+Brasil,João Pessoa,103.0,118.0,15.0,34,34,0
+Brasil,Morro de Sao Paulo,248.0,259.0,11.0,11,12,1
+Brasil,Navegantes,9.0,20.0,11.0,6,6,0
+Brasil,Maracajaú ,72.0,81.0,9.0,4,4,0
+Brasil,Santos,120.0,128.0,8.0,13,13,0
+Brasil,Arraial d'Ajuda,3.0,11.0,8.0,7,8,1
+Brasil,Aracaju,24.0,31.0,7.0,20,24,4
+Brasil,Caxias do Sul,7.0,14.0,7.0,43,43,0
+Brasil,Praia do Forte,11.0,17.0,6.0,4,4,0
+Brasil,Bonito,156.0,162.0,6.0,36,36,0
+Brasil,Barreirinhas,333.0,338.0,5.0,24,24,0
+Brasil,Porto Alegre,225.0,229.0,4.0,8,8,0
+Brasil,Cuiabá,37.0,41.0,4.0,4,4,0
+Brasil,Ubatuba ,12.0,16.0,4.0,15,15,0
+Brasil,Itacaré,6.0,10.0,4.0,8,8,0
+Brasil,Japaratinga ,5.0,8.0,3.0,3,3,0
+Brasil,Vitória,47.0,50.0,3.0,13,13,0
+Brasil,Palmas,3.0,5.0,2.0,9,9,0
+Brasil,Ilhabela,69.0,71.0,2.0,9,9,0
+Brasil,Praia Grande,14.0,16.0,2.0,16,16,0
+Brasil,Campo Grande,6.0,8.0,2.0,4,4,0
+Brasil,Sant'Ana do Livramento,34.0,36.0,2.0,3,3,0
+Brasil,Pipa,54.0,54.0,0.0,6,6,0
+Brasil,Alter do Chão,15.0,15.0,0.0,13,13,0
+Brasil,Lençóis,25.0,25.0,0.0,8,9,1
+Brasil,Joinville,0.0,0.0,0.0,6,6,0
+Brasil,Pomerode,0.0,0.0,0.0,3,3,0
+Brasil,Barra do Turvo,0.0,0.0,0.0,5,5,0
+Brasil,Campos do Jordão,93.0,93.0,0.0,9,9,0
+Brasil,Três Coroas,42.0,42.0,0.0,8,8,0
+Brasil,Nova Petrópolis,0.0,0.0,0.0,4,4,0
+Brasil,Bento Gonçalves,17.0,17.0,0.0,20,20,0
+Brasil,Monte Verde,6.0,6.0,0.0,9,9,0
+Brasil,São Francisco de Paula,0.0,0.0,0.0,4,4,0
+Brasil,Pelotas,0.0,0.0,0.0,3,3,0
+Brasil,Urubici ,0.0,0.0,0.0,3,3,0
+Brasil,São Joaquim,0.0,0.0,0.0,8,8,0
+Brasil,Bom Jardim da Serra,0.0,0.0,0.0,3,3,0
+Brasil,Imbituba,0.0,0.0,0.0,12,12,0
+Brasil,Garopaba ,0.0,0.0,0.0,7,7,0
+Brasil,Laguna,2.0,2.0,0.0,3,3,0
+Brasil,Ilhéus,32.0,32.0,0.0,7,7,0
+Brasil,São Sebastião,0.0,0.0,0.0,9,6,-3
+Brasil,Ouro Preto,72.0,72.0,0.0,18,18,0
+Brasil,Cavalcante,0.0,0.0,0.0,6,6,0
+Brasil,Campina Grande,0.0,0.0,0.0,3,3,0
+Brasil,Botucatu,0.0,0.0,0.0,3,3,0
+Brasil,Teutônia ,0.0,0.0,0.0,3,3,0
+Brasil,Holambra ,7.0,7.0,0.0,10,10,0
+Brasil,Alto Paraíso de Goiás,0.0,0.0,0.0,9,9,0
+Brasil,Belén,29.0,29.0,0.0,12,12,0
+Brasil,Teresina ,1.0,1.0,0.0,16,17,1
+Brasil,Río Branco,0.0,0.0,0.0,5,5,0
+Brasil,Boa Vista,4.0,4.0,0.0,6,6,0
+Brasil,Cambará do Sul ,0.0,0.0,0.0,16,16,0
+Brasil,Bertioga,0.0,0.0,0.0,6,6,0
+Brasil,Tramandaí ,0.0,0.0,0.0,3,3,0
+Brasil,Mampituba,4.0,4.0,0.0,9,9,0
+Brasil,Cascavel,0.0,0.0,0.0,4,4,0
+Brasil,Imbé,0.0,0.0,0.0,6,6,0
+Brasil,Três Forquilhas,0.0,0.0,0.0,3,3,0
+Brasil,Andradina,0.0,0.0,0.0,3,3,0
+Brasil,Atibaia,0.0,0.0,0.0,6,6,0
+Brasil,Santo Amaro do Maranhão,7.0,7.0,0.0,10,10,0
+Brasil,Niterói,15.0,15.0,0.0,4,4,0
+Brasil,Boituva,0.0,0.0,0.0,3,3,0
+Brasil,Chapada dos Guimarães,19.0,19.0,0.0,7,7,0
+Brasil,Pirenópolis,0.0,0.0,0.0,14,14,0
+Brasil,Atins,3.0,3.0,0.0,7,7,0
+Brasil,Monte Belo do Sul,0.0,0.0,0.0,3,3,0
+Brasil,Isla de Boipeba,11.0,11.0,0.0,7,7,0
+Brasil,Goiânia,4.0,4.0,0.0,10,10,0
+Brasil,Parnaíba,0.0,0.0,0.0,9,9,0
+Brasil,Conceição de Jacareí,16.0,16.0,0.0,4,4,0
+Brasil,Balneário Piçarras,4.0,4.0,0.0,3,3,0
+Brasil,Mangaratiba,0.0,0.0,0.0,3,3,0
+Brasil,São Vicente,0.0,0.0,0.0,3,3,0
+Brasil,Garibaldi,0.0,0.0,0.0,3,3,0
+Brasil,Vinhedo,2.0,2.0,0.0,3,3,0
+Brasil,Bituruna,0.0,0.0,0.0,3,3,0
+Brasil,Porto Velho,0.0,0.0,0.0,3,3,0
+Brasil,São Miguel dos Milagres,0.0,0.0,0.0,3,3,0
+Brasil,São Roque,0.0,0.0,0.0,3,3,0
+Brasil,Gramado,915.0,880.0,-35.0,38,37,-1
+Brasil,São Luís,490.0,319.0,-171.0,13,12,-1
+Brasil,Salvador de Bahía,50566.0,36595.0,-13971.0,43,45,2
+Brasil,Río de Janeiro,261483.0,240324.0,-21159.0,155,160,5
+Brasil,Porto Belo,NULL,NULL,NULL,0,0,0
+Brasil,Governador Celso Ramos,NULL,NULL,NULL,0,0,0
+Brasil,Blumenau,NULL,NULL,NULL,0,0,0
+Brasil,Santo Amaro da Imperatriz,NULL,NULL,NULL,0,0,0
+Brasil,Itacarambi,NULL,NULL,NULL,0,0,0
+Brasil,São Roque de Minas,NULL,NULL,NULL,0,0,0
+Brasil,Vila Velha,NULL,NULL,NULL,8,8,0
+Brasil,Caraíva,NULL,NULL,NULL,4,4,0
+Brasil,Santa Cruz Cabrália,NULL,NULL,NULL,4,4,0
+Brasil,Três Cachoeiras,NULL,NULL,NULL,0,0,0
+Brasil,Ivoti,NULL,NULL,NULL,0,0,0
+Brasil,Sirinhaém,NULL,NULL,NULL,3,3,0
+Brasil,Cajueiro da Praia,NULL,NULL,NULL,0,0,0
+Brasil,Tutóia,NULL,NULL,NULL,0,0,0
+Brasil,Trairi,NULL,NULL,NULL,0,0,0
+Brasil,Amontada ,NULL,NULL,NULL,0,0,0
+Brasil,Aquiraz,NULL,NULL,NULL,0,0,0
+Brasil,Rio Quente,NULL,NULL,NULL,0,0,0
+Brasil,Tamandaré,NULL,0.0,NULL,0,3,3
+Brasil,Mangue Seco,NULL,NULL,NULL,0,0,0
+Brasil,Baixio,NULL,NULL,NULL,0,0,0
+Brasil,Imbassaí,NULL,NULL,NULL,4,4,0
+Brasil,Guarajuba,NULL,NULL,NULL,4,4,0
+Brasil,Costa do Sauípe,NULL,NULL,NULL,4,4,0
+Brasil,Presidente Figueiredo,NULL,NULL,NULL,0,0,0
+Brasil,Cabo Santo Agostinho,NULL,NULL,NULL,0,0,0
+Chile,Santiago de Chile,105402.0,108308.0,2906.0,82,85,3
+Chile,Valparaíso,8410.0,9166.0,756.0,29,29,0
+Chile,Punta Arenas,4490.0,4674.0,184.0,24,24,0
+Chile,San Pedro de Atacama,7285.0,7460.0,175.0,28,28,0
+Chile,Puerto Varas,4965.0,5108.0,143.0,24,24,0
+Chile,Puerto Natales,2462.0,2577.0,115.0,13,12,-1
+Chile,Puerto Montt,1516.0,1584.0,68.0,24,24,0
+Chile,Calama,1501.0,1568.0,67.0,11,11,0
+Chile,Puerto Tranquilo,558.0,606.0,48.0,7,7,0
+Chile,Isla de Pascua,943.0,983.0,40.0,12,12,0
+Chile,Viña del Mar,726.0,762.0,36.0,14,14,0
+Chile,Puerto Chacabuco,365.0,397.0,32.0,6,6,0
+Chile,Torres del Paine,225.0,254.0,29.0,3,3,0
+Chile,Iquique,332.0,355.0,23.0,12,12,0
+Chile,Ancud,226.0,244.0,18.0,3,3,0
+Chile,Valdivia,87.0,95.0,8.0,9,9,0
+Chile,Concepción,191.0,199.0,8.0,9,9,0
+Chile,Pucón,311.0,317.0,6.0,16,16,0
+Chile,Puerto Williams,37.0,43.0,6.0,10,11,1
+Chile,Pisco Elqui,39.0,41.0,2.0,7,8,1
+Chile,Puerto Sánchez,27.0,29.0,2.0,4,4,0
+Chile,Castro,38.0,39.0,1.0,10,10,0
+Chile,Ensenada,0.0,0.0,0.0,3,3,0
+Chile,San Antonio,0.0,0.0,0.0,3,3,0
+Chile,Buin,35.0,35.0,0.0,5,5,0
+Chile,Frutillar,128.0,128.0,0.0,3,3,0
+Chile,Coyhaique,0.0,0.0,0.0,3,3,0
+Chile,Putre ,17.0,17.0,0.0,15,15,0
+Chile,Futaleufú,0.0,0.0,0.0,3,3,0
+Chile,Arica,160.0,160.0,0.0,7,7,0
+Chile,Peulla ,3.0,3.0,0.0,3,3,0
+Chile,Chile Chico,13.0,13.0,0.0,3,3,0
+Chile,Mallín Grande,0.0,0.0,0.0,3,3,0
+Chile,San Fabián de Alico,2.0,2.0,0.0,4,4,0
+Chile,Hornopirén ,0.0,0.0,0.0,3,3,0
+Chile,Malalcahuello ,2.0,2.0,0.0,5,5,0
+Chile,Pica,12.0,12.0,0.0,7,7,0
+Chile,Ovalle,7.0,7.0,0.0,12,12,0
+Chile,Casablanca,0.0,0.0,0.0,3,3,0
+Chile,Olmué,7.0,7.0,0.0,4,4,0
+Chile,Caleta Chañaral,0.0,0.0,0.0,3,3,0
+Chile,La Serena,125.0,115.0,-10.0,17,16,-1
+Chile,Villa O'Higgins,NULL,NULL,NULL,0,0,0
+Chile,Chonchi,NULL,NULL,NULL,8,8,0
+Chile,Queilen,NULL,NULL,NULL,0,0,0
+Chile,Coquimbo,NULL,NULL,NULL,0,0,0
+Chile,Vicuña,NULL,NULL,NULL,0,0,0
+Chile,Antofagasta ,NULL,NULL,NULL,0,0,0
+Chile,Placilla,NULL,NULL,NULL,0,0,0
+Chile,San Clemente,NULL,NULL,NULL,0,0,0
+Chile,Vilches,NULL,NULL,NULL,0,0,0
+Chile,Llanquihue,NULL,NULL,NULL,0,0,0
+Colombia,Medellín,357584.0,368448.0,10864.0,96,98,2
+Colombia,Cartagena de Indias,259571.0,268514.0,8943.0,132,132,0
+Colombia,Bogotá,126917.0,130363.0,3446.0,101,103,2
+Colombia,Santa Marta,48772.0,49853.0,1081.0,73,73,0
+Colombia,Cali,16939.0,17654.0,715.0,43,43,0
+Colombia,San Andrés,6672.0,6891.0,219.0,37,38,1
+Colombia,Bucaramanga,210.0,318.0,108.0,15,15,0
+Colombia,Barichara,421.0,509.0,88.0,12,12,0
+Colombia,Salento,2690.0,2771.0,81.0,34,34,0
+Colombia,Barranquilla,4000.0,4070.0,70.0,34,34,0
+Colombia,Pereira,2275.0,2339.0,64.0,30,30,0
+Colombia,Guatapé,1608.0,1658.0,50.0,30,30,0
+Colombia,Leticia,1534.0,1579.0,45.0,25,25,0
+Colombia,Minca,93.0,132.0,39.0,10,10,0
+Colombia,Pasto,403.0,435.0,32.0,13,13,0
+Colombia,Armenia,692.0,709.0,17.0,30,30,0
+Colombia,Villavicencio,36.0,53.0,17.0,13,13,0
+Colombia,Jardín,216.0,232.0,16.0,10,10,0
+Colombia,Puerto Colombia,11.0,27.0,16.0,3,3,0
+Colombia,Santiago de Tolú,190.0,203.0,13.0,7,7,0
+Colombia,Popayán,161.0,171.0,10.0,19,20,1
+Colombia,Ipiales,147.0,157.0,10.0,6,6,0
+Colombia,Mompox,182.0,191.0,9.0,12,12,0
+Colombia,Manizales,212.0,220.0,8.0,21,21,0
+Colombia,Puerto Nariño,180.0,188.0,8.0,9,9,0
+Colombia,Zipaquirá,837.0,845.0,8.0,3,3,0
+Colombia,Neiva,189.0,196.0,7.0,25,25,0
+Colombia,Ibagué,116.0,123.0,7.0,35,35,0
+Colombia,Providencia,84.0,90.0,6.0,12,12,0
+Colombia,Guarne,4.0,10.0,6.0,4,4,0
+Colombia,Barú ,227.0,232.0,5.0,9,9,0
+Colombia,Coveñas,17.0,22.0,5.0,6,6,0
+Colombia,San Félix,3.0,8.0,5.0,3,3,0
+Colombia,Rionegro,11.0,15.0,4.0,6,6,0
+Colombia,Santa Rosa de Cabal,0.0,2.0,2.0,7,7,0
+Colombia,Palomino,36.0,37.0,1.0,10,10,0
+Colombia,La Macarena,33.0,33.0,0.0,4,4,0
+Colombia,Riohacha,140.0,140.0,0.0,16,16,0
+Colombia,San Gil,113.0,113.0,0.0,9,10,1
+Colombia,Villavieja,23.0,23.0,0.0,8,8,0
+Colombia,Suesca,29.0,29.0,0.0,10,10,0
+Colombia,Filandia,138.0,138.0,0.0,12,13,1
+Colombia,Calarcá,2.0,2.0,0.0,6,6,0
+Colombia,Quimbaya,37.0,37.0,0.0,7,7,0
+Colombia,Buenavista,86.0,86.0,0.0,5,5,0
+Colombia,Villa de Leyva,599.0,599.0,0.0,23,23,0
+Colombia,Silvia ,9.0,9.0,0.0,9,9,0
+Colombia,Bahía Solano,49.0,49.0,0.0,4,4,0
+Colombia,Murillo,0.0,0.0,0.0,4,4,0
+Colombia,Ciénaga,22.0,22.0,0.0,9,9,0
+Colombia,Honda,41.0,41.0,0.0,6,6,0
+Colombia,Cocorná,0.0,0.0,0.0,7,7,0
+Colombia,Chocontá,0.0,0.0,0.0,3,3,0
+Colombia,Sutatausa,0.0,0.0,0.0,3,3,0
+Colombia,Simijaca,0.0,0.0,0.0,3,3,0
+Colombia,Ubaté,0.0,0.0,0.0,4,4,0
+Colombia,Fúquene,0.0,0.0,0.0,5,5,0
+Colombia,Útica,12.0,12.0,0.0,8,8,0
+Colombia,Tobia,6.0,6.0,0.0,8,8,0
+Colombia,Guaduas,5.0,5.0,0.0,3,3,0
+Colombia,San Agustín,30.0,30.0,0.0,14,14,0
+Colombia,Monguí,0.0,0.0,0.0,4,4,0
+Colombia,Salgar,0.0,0.0,0.0,5,5,0
+Colombia,San Rafael,0.0,0.0,0.0,3,3,0
+Colombia,Santa Elena,0.0,0.0,0.0,5,5,0
+Colombia,Valledupar,40.0,40.0,0.0,6,6,0
+Colombia,Cartago,3.0,3.0,0.0,5,5,0
+Colombia,Tunja,26.0,26.0,0.0,13,13,0
+Colombia,Envigado,0.0,0.0,0.0,3,3,0
+Colombia,San Basilio de Palenque,6.0,6.0,0.0,3,3,0
+Colombia,Puerto Triunfo,20.0,20.0,0.0,5,5,0
+Colombia,Playa de Ladrilleros,3.0,3.0,0.0,5,5,0
+Colombia,Buenaventura,3.0,3.0,0.0,3,3,0
+Colombia,Jericó,0.0,0.0,0.0,3,3,0
+Colombia,Pitalito,0.0,0.0,0.0,8,8,0
+Colombia,Buga,16.0,16.0,0.0,3,3,0
+Colombia,San José del Guaviare,0.0,0.0,0.0,3,3,0
+Colombia,Nemocón,14.0,14.0,0.0,3,3,0
+Colombia,Turmequé,0.0,0.0,0.0,5,5,0
+Colombia,Isla Fuerte,0.0,0.0,0.0,3,3,0
+Colombia,Turbaco,0.0,0.0,0.0,3,3,0
+Colombia,Sesquilé,NULL,NULL,NULL,0,0,0
+Colombia,Fusagasugá,NULL,NULL,NULL,0,0,0
+Colombia,Fresno,NULL,NULL,NULL,0,0,0
+Colombia,Líbano ,NULL,NULL,NULL,0,0,0
+Colombia,Cucunubá,NULL,NULL,NULL,0,0,0
+Colombia,San Luis,NULL,NULL,NULL,6,6,0
+Colombia,Tenjo,NULL,NULL,NULL,3,3,0
+Colombia,Altavista,NULL,NULL,NULL,0,0,0
+Colombia,Campo Alegre,NULL,NULL,NULL,3,3,0
+Colombia,Paipa,NULL,NULL,NULL,0,0,0
+Colombia,Chía,NULL,NULL,NULL,0,0,0
+México,Ciudad de México,310017.0,315928.0,5911.0,174,174,0
+México,Playa del Carmen,251791.0,253849.0,2058.0,94,94,0
+México,Cancún,114135.0,115695.0,1560.0,108,108,0
+México,Mérida,23410.0,24695.0,1285.0,55,56,1
+México,Oaxaca,23364.0,24210.0,846.0,40,40,0
+México,Puebla,10763.0,11337.0,574.0,34,34,0
+México,Guadalajara,25833.0,26382.0,549.0,58,58,0
+México,Teotihuacán,6491.0,6820.0,329.0,14,14,0
+México,Los Cabos,6160.0,6420.0,260.0,55,54,-1
+México,Cozumel,5424.0,5652.0,228.0,37,37,0
+México,San Cristóbal de las Casas,7423.0,7579.0,156.0,27,27,0
+México,Puerto Vallarta,2624.0,2750.0,126.0,57,57,0
+México,Chichén Itzá,5175.0,5299.0,124.0,8,8,0
+México,La Paz,1088.0,1196.0,108.0,20,20,0
+México,Huatulco,4623.0,4730.0,107.0,38,38,0
+México,Monterrey,2298.0,2392.0,94.0,35,35,0
+México,Chihuahua,554.0,645.0,91.0,21,21,0
+México,San Miguel de Allende,2317.0,2405.0,88.0,18,18,0
+México,Santiago de Querétaro,1977.0,2064.0,87.0,24,24,0
+México,Guanajuato,2864.0,2935.0,71.0,20,20,0
+México,Tulum,3284.0,3343.0,59.0,67,68,1
+México,Puerto Escondido,2957.0,3008.0,51.0,22,22,0
+México,Mazatlán,812.0,861.0,49.0,27,26,-1
+México,Tuxtla Gutiérrez,2154.0,2202.0,48.0,19,19,0
+México,Veracruz,853.0,900.0,47.0,28,28,0
+México,Valle de Bravo,292.0,331.0,39.0,16,16,0
+México,Ixtapa Zihuatanejo,409.0,447.0,38.0,18,18,0
+México,Acapulco,1315.0,1352.0,37.0,21,21,0
+México,Bacalar,1532.0,1565.0,33.0,15,15,0
+México,Puerto Morelos,1319.0,1351.0,32.0,65,65,0
+México,Akumal,1282.0,1314.0,32.0,55,55,0
+México,Cholula,157.0,188.0,31.0,10,10,0
+México,San Francisco de Campeche,701.0,731.0,30.0,26,26,0
+México,Zacatlán,56.0,85.0,29.0,3,3,0
+México,Riviera Nayarit,147.0,170.0,23.0,25,25,0
+México,Pachuca,281.0,302.0,21.0,18,18,0
+México,Holbox,1322.0,1342.0,20.0,12,12,0
+México,Valladolid,640.0,657.0,17.0,14,14,0
+México,Ciudad Valles,327.0,342.0,15.0,13,13,0
+México,Zacatecas,195.0,208.0,13.0,8,8,0
+México,Palenque,720.0,732.0,12.0,21,21,0
+México,Tequisquiapan ,53.0,65.0,12.0,7,7,0
+México,Ensenada,207.0,217.0,10.0,8,8,0
+México,Los Mochis,45.0,55.0,10.0,4,4,0
+México,Mahahual,264.0,272.0,8.0,10,10,0
+México,Aguascalientes ,224.0,232.0,8.0,13,12,-1
+México,Tequila,112.0,120.0,8.0,4,4,0
+México,Isla Mujeres,402.0,409.0,7.0,7,7,0
+México,Hermosillo,323.0,329.0,6.0,14,14,0
+México,Tijuana,17.0,23.0,6.0,7,7,0
+México,Morelia,690.0,695.0,5.0,23,23,0
+México,Loreto,24.0,29.0,5.0,8,8,0
+México,San Luis Potosí,192.0,196.0,4.0,17,17,0
+México,Uxmal,54.0,58.0,4.0,3,3,0
+México,Durango,106.0,109.0,3.0,11,11,0
+México,San Pedro Tlaquepaque,42.0,44.0,2.0,5,5,0
+México,Edzná,23.0,25.0,2.0,3,3,0
+México,Costa Mujeres,2.0,4.0,2.0,12,12,0
+México,Taxco,310.0,312.0,2.0,11,11,0
+México,Puerto Ángel,0.0,2.0,2.0,3,3,0
+México,Creel,27.0,28.0,1.0,9,9,0
+México,Tampico ,57.0,58.0,1.0,10,10,0
+México,Boca del Río,90.0,90.0,0.0,20,20,0
+México,Bernal,189.0,189.0,0.0,5,5,0
+México,El Fuerte,25.0,25.0,0.0,5,5,0
+México,Posada Barrancas,15.0,15.0,0.0,3,3,0
+México,Colima,5.0,5.0,0.0,9,11,2
+México,Ciudad Obregón,0.0,0.0,0.0,3,3,0
+México,Ek Balam,2.0,2.0,0.0,3,3,0
+México,Toluca ,54.0,54.0,0.0,3,3,0
+México,Kantemó,2.0,2.0,0.0,3,3,0
+México,Tekal de Venegas,0.0,0.0,0.0,3,3,0
+México,Frontera ,0.0,0.0,0.0,3,3,0
+México,Chetumal ,104.0,104.0,0.0,5,5,0
+México,Xcalak,0.0,0.0,0.0,4,4,0
+México,Chapa de Mota,18.0,18.0,0.0,3,3,0
+México,Saltillo,6.0,6.0,0.0,4,4,0
+México,Tlaxcala,16.0,16.0,0.0,6,6,0
+México,Tlaxco,5.0,5.0,0.0,3,3,0
+México,Huamantla,11.0,11.0,0.0,7,7,0
+México,Yaxuná ,2.0,2.0,0.0,3,3,0
+México,Isla Aguada,8.0,8.0,0.0,4,4,0
+México,Cuetzalán,20.0,20.0,0.0,4,4,0
+México,Jalcomulco,0.0,0.0,0.0,3,3,0
+México,Manzanillo,112.0,112.0,0.0,7,7,0
+México,Villa del Carbón,6.0,6.0,0.0,4,4,0
+México,Nanacamilpa,71.0,71.0,0.0,4,4,0
+México,Río Lagartos,38.0,38.0,0.0,8,8,0
+México,Isla Arena,0.0,0.0,0.0,4,4,0
+México,León,32.0,32.0,0.0,8,8,0
+México,Parras de la Fuente,76.0,76.0,0.0,8,8,0
+México,Tepic,9.0,9.0,0.0,7,7,0
+México,Mexicali,0.0,0.0,0.0,3,3,0
+México,Sayulita ,0.0,0.0,0.0,8,8,0
+México,Tepoztlán,4.0,4.0,0.0,3,8,5
+México,Tapachula,0.0,0.0,0.0,5,5,0
+México,Progreso,10.0,10.0,0.0,8,8,0
+México,Mazamitla,4.0,4.0,0.0,3,4,1
+México,Riviera Maya,NULL,NULL,NULL,0,0,0
+México,Orizaba,NULL,NULL,NULL,0,0,0
+México,Magdalena de Kino,NULL,NULL,NULL,0,0,0
+México,Rosarito,NULL,NULL,NULL,0,0,0
+México,Apizaco,NULL,NULL,NULL,6,6,0
+México,Uruapan,NULL,NULL,NULL,0,0,0
+México,Cobá,NULL,NULL,NULL,0,0,0
+México,Jala,NULL,NULL,NULL,0,0,0
+México,Compostela,NULL,NULL,NULL,0,0,0
+México,San Blas,NULL,NULL,NULL,0,0,0
+México,Ahuacatlán,NULL,NULL,NULL,0,0,0
+México,Amealco,NULL,NULL,NULL,0,0,0
+México,Valle de Santiago,NULL,NULL,NULL,0,0,0
+México,Mazunte,NULL,NULL,NULL,3,3,0
+México,San José del Cabo,NULL,NULL,NULL,0,0,0
+México,Xalapa,NULL,NULL,NULL,0,0,0
+México,Zapopan,NULL,NULL,NULL,4,4,0
+México,Valle de Guadalupe,NULL,NULL,NULL,0,0,0
+Perú,Lima,158273.0,160991.0,2718.0,102,102,0
+Perú,Cusco,153957.0,155803.0,1846.0,109,111,2
+Perú,Arequipa,50761.0,51814.0,1053.0,40,41,1
+Perú,Puno,9590.0,9728.0,138.0,25,25,0
+Perú,Ica,6799.0,6876.0,77.0,34,35,1
+Perú,Iquitos,2693.0,2743.0,50.0,32,32,0
+Perú,Aguas Calientes,2007.0,2049.0,42.0,9,9,0
+Perú,Paracas,3427.0,3457.0,30.0,16,16,0
+Perú,Urubamba,750.0,775.0,25.0,17,17,0
+Perú,Callao,1358.0,1383.0,25.0,17,17,0
+Perú,Nazca,2915.0,2937.0,22.0,16,16,0
+Perú,Ollantaytambo,127.0,138.0,11.0,11,11,0
+Perú,Máncora,201.0,210.0,9.0,12,12,0
+Perú,Ayacucho,207.0,213.0,6.0,23,23,0
+Perú,Trujillo,627.0,632.0,5.0,17,17,0
+Perú,Puerto Maldonado,649.0,654.0,5.0,19,19,0
+Perú,Chiclayo,77.0,81.0,4.0,15,15,0
+Perú,Tarapoto,286.0,289.0,3.0,21,21,0
+Perú,Casma,18.0,21.0,3.0,7,7,0
+Perú,Tingo María,1.0,3.0,2.0,13,13,0
+Perú,La Merced,6.0,8.0,2.0,11,11,0
+Perú,Chachapoyas,82.0,82.0,0.0,8,8,0
+Perú,Tacna,165.0,165.0,0.0,18,18,0
+Perú,Huaraz,465.0,465.0,0.0,16,16,0
+Perú,Pucallpa,44.0,44.0,0.0,18,18,0
+Perú,Cajamarca,289.0,289.0,0.0,15,15,0
+Perú,Huánuco,33.0,33.0,0.0,11,11,0
+Perú,Huancayo,23.0,23.0,0.0,10,10,0
+Perú,Piura,117.0,117.0,0.0,7,7,0
+Perú,Puerto Inca,2.0,2.0,0.0,11,11,0
+Perú,Chincha,4.0,4.0,0.0,5,5,0
+Perú,Cerro de Pasco,0.0,0.0,0.0,7,7,0
+Perú,Villa Rica,3.0,3.0,0.0,7,7,0
+Perú,San Bartolo,2.0,2.0,0.0,5,5,0
+Perú,San Ramón,3.0,3.0,0.0,9,9,0
+Perú,Oxapampa,38.0,38.0,0.0,7,7,0
+Perú,Punta Sal,7.0,7.0,0.0,4,4,0
+Perú,Punta Hermosa,0.0,0.0,0.0,2,2,0
+Perú,Punta Negra,1.0,1.0,0.0,2,2,0
+Perú,Moyobamba,9.0,9.0,0.0,8,8,0
+Perú,Yucay,0.0,0.0,0.0,7,7,0
+Perú,Juliaca,32.0,32.0,0.0,6,6,0
+Perú,Tarma,34.0,34.0,0.0,14,14,0
+Perú,Chivay,8.0,8.0,0.0,2,2,0
+Perú,Maras,0.0,0.0,0.0,2,2,0
+Perú,Chequerec,0.0,0.0,0.0,2,2,0
+Perú,Huacachina,NULL,NULL,NULL,0,0,0
+Perú,Yanque,NULL,NULL,NULL,0,0,0
+Perú,Jaén,NULL,NULL,NULL,0,0,0
+Perú,Huancavelica,NULL,NULL,NULL,0,0,0
+Perú,Lunahuaná,NULL,NULL,NULL,0,0,0
+Perú,Calca,NULL,NULL,NULL,2,2,0
+Perú,Písac,NULL,NULL,NULL,2,2,0

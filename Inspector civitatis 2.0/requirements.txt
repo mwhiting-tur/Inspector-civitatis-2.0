@@ -1,0 +1,8 @@
+# Automatización de Navegador
+playwright==1.40.0
+
+# Procesamiento de Datos
+pandas==2.1.3
+
+# Utilidades
+python-dotenv==1.0.0
