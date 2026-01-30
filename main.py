@@ -54,7 +54,8 @@ if __name__ == "__main__":
     print("--- INSPECTOR DE PRECIOS ---")
     print("1. Ejecutar Scraper Civitatis")
     print("2. Ejecutar Scraper Nomades")
-    opcion = input("Selecciona una opción (1 o 2): ")
+    #opcion = input("Selecciona una opción (1 o 2): ")
+    opcion = "1"
 
     if opcion == "1":
         asyncio.run(ejecutar_civitatis())
