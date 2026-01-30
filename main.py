@@ -8,7 +8,7 @@ from drivers.nomades import NomadesScraper
 
 # --- (Civitatis) ---
 def cargar_destinos_civitatis(paises):
-    with open('Inspector civitatis 2.0\destinos_civitatis.json', 'r', encoding='utf-8') as f:
+    with open('destinos_civitatis.json', 'r', encoding='utf-8') as f:
         todos = json.load(f)
     return [d for d in todos if d['nameCountry'].lower() in [p.lower() for p in paises]]
 
