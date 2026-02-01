@@ -7,7 +7,13 @@ jobs:
   run-scraper:
     # Forzamos 22.04 que es la versión más estable para Playwright
     runs-on: ubuntu-22.04 
-    
+    strategy:
+      # AQUÍ ESTÁ LA MAGIA: GitHub lanzará una máquina por cada país en la lista
+      matrix:
+        country: ["Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica","Cuba", "Ecuador", "El Salvador", "Guatemala", "Haití", "Honduras","México", "Nicaragua", "Panamá", "Paraguay", "Perú", "República Dominicana","Uruguay", "Venezuela", "EEUU", "España", "Italia", "Francia","Países Bajos", "Reino Unido", "Alemania", "Bélgica", "Portugal","Turquia", "Grecia", "Austria", "Japón", "China", "Tailandia", "Australia"]
+      # fail-fast: false asegura que si un país falla, los otros sigan corriendo
+      fail-fast: false
+
     steps:
       - name: Descargar código del repo
         uses: actions/checkout@v4
@@ -28,16 +34,16 @@ jobs:
           # Usar 'python -m' asegura que encuentre Playwright donde se instaló
           python -m playwright install chromium --with-deps
 
-      - name: Ejecutar el script de scraping
-        run: python main.py 
+      - name: Ejecutar el script por país
+        # Le pasamos el nombre del país de la matriz como argumento
+        run: python main.py "${{ matrix.country }}"
 
-      - name: Guardar cambios (CSV/Excel)
-        # ESTO ES LO MÁS IMPORTANTE:
-        # Se ejecutará aunque el paso anterior haya fallado o dado timeout.
-        if: always() 
+      - name: Guardar cambios (Archivo individual por país)
+        if: always()
         run: |
           git config --local user.email "action@github.com"
           git config --local user.name "GitHub Action"
-          git add data/*.csv
-          git commit -m "Snapshot parcial de datos (en caso de error)" || exit 0
+          git pull origin main --rebase
+          git add data/
+          git commit -m "Datos actualizados: ${{ matrix.country }}" || exit 0
           git push

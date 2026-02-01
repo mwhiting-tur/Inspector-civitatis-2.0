@@ -1,6 +1,7 @@
 import asyncio
 import os
 import json
+import sys
 from datetime import datetime
 from drivers.civitatis import CivitatisScraper
 from drivers.civitatis_semanal import CivitatisScraperSemanal
@@ -26,6 +27,33 @@ def parsear_destinos_nomades(ruta):
             elif linea.startswith("http"): tareas.append({"pais": pais_actual, "url": linea})
     return tareas
 
+async def ejecutar_civitatis(pais_objetivo):
+    # Cargamos solo el país que viene desde GitHub Actions
+    destinos = cargar_destinos_civitatis([pais_objetivo])
+    
+    # Creamos un archivo CSV específico para este país
+    # Esto evita conflictos cuando varias máquinas intentan escribir el mismo archivo
+    nombre_archivo = f"data/operadores_{pais_objetivo.lower()}.csv"
+    
+    print(f"🚀 Iniciando scraping para {pais_objetivo} ({len(destinos)} destinos)")
+    
+    # LÓGICA DE CHECKPOINT (OPCIONAL PERO RECOMENDADA)
+    # Aquí podrías filtrar destinos que ya existan en nombre_archivo
+    
+    scraper = CivitatisScraper()
+    await scraper.extract_list(destinos, nombre_archivo, currency_code="CLP")
+
+if __name__ == "__main__":
+    if not os.path.exists('data'): os.makedirs('data')
+    
+    # Capturamos el país desde los argumentos del comando
+    if len(sys.argv) > 1:
+        pais = sys.argv[1]
+        asyncio.run(ejecutar_civitatis(pais))
+    else:
+        print("❌ Error: No se especificó un país.")
+
+"""       
 async def ejecutar_civitatis():
     PAISES = [
     "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica", 
@@ -87,3 +115,4 @@ if __name__ == "__main__":
         asyncio.run(ejecutar_nomades())
     else:
         print("Opción no válida.")
+"""
