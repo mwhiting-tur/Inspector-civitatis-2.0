@@ -8,11 +8,46 @@ jobs:
     # Forzamos 22.04 que es la versión más estable para Playwright
     runs-on: ubuntu-22.04 
     strategy:
-      # AQUÍ ESTÁ LA MAGIA: GitHub lanzará una máquina por cada país en la lista
-      matrix:
-        country: ["Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica","Cuba", "Ecuador", "El Salvador", "Guatemala", "Haití", "Honduras","México", "Nicaragua", "Panamá", "Paraguay", "Perú", "República Dominicana","Uruguay", "Venezuela", "EEUU", "España", "Italia", "Francia","Países Bajos", "Reino Unido", "Alemania", "Bélgica", "Portugal","Turquia", "Grecia", "Austria", "Japón", "China", "Tailandia", "Australia"]
-      # fail-fast: false asegura que si un país falla, los otros sigan corriendo
       fail-fast: false
+      max-parallel: 15
+      matrix:
+        country: [
+          "Estados Unidos", "Turquía",
+          # --- América y Caribe ---
+          "Canadá", "Bahamas", "Barbados", "Belice", "Granada", "Guyana", "Jamaica", 
+          "San Cristóbal y Nieves", "Santa Lucía", "San Vicente y las Granadinas", 
+          "Surinam", "Trinidad y Tobago", "Antigua y Barbuda", "Dominica",
+          # --- Europa ---
+          "Albania", "Andorra", "Armenia", "Azerbaiyán", "Bielorrusia", 
+          "Bosnia y Herzegovina", "Bulgaria", "Chipre", "Croacia", "Dinamarca", 
+          "Eslovaquia", "Eslovenia", "Estonia", "Finlandia", "Georgia", "Hungría", 
+          "Irlanda", "Islandia", "Kazajistán", "Letonia", "Liechtenstein", 
+          "Lituania", "Luxemburgo", "Macedonia del Norte", "Malta", "Moldavia", 
+          "Mónaco", "Montenegro", "Noruega", "Polonia", "República Checa", 
+          "Rumanía", "Rusia", "San Marino", "Serbia", "Suecia", "Suiza", "Ucrania",
+          # --- África ---
+          "Angola", "Argelia", "Benín", "Botsuana", "Burkina Faso", "Burundi", 
+          "Cabo Verde", "Camerún", "Chad", "Comoras", "Costa de Marfil", "Egipto", 
+          "Eritrea", "Etiopía", "Gabón", "Gambia", "Ghana", "Guinea", "Guinea-Bisáu", 
+          "Guinea Ecuatorial", "Kenia", "Lesoto", "Liberia", "Libia", "Madagascar", 
+          "Malaui", "Malí", "Marruecos", "Mauricio", "Mauritania", "Mozambique", 
+          "Namibia", "Níger", "Nigeria", "República Centroafricana", "República del Congo", 
+          "República Democrática del Congo", "Ruanda", "Santo Tomé y Príncipe", 
+          "Senegal", "Seychelles", "Sierra Leona", "Somalia", "Suazilandia", 
+          "Sudáfrica", "Sudán", "Sudán del Sur", "Tanzania", "Togo", "Túnez", 
+          "Uganda", "Yibuti", "Zambia", "Zimbabue",
+          # --- Asia y Medio Oriente ---
+          "Afganistán", "Arabia Saudita", "Baréin", "Bangladés", "Brunéi", "Bután", 
+          "Camboya", "Catar", "Corea del Sur", "Emiratos Árabes Unidos", "Filipinas", 
+          "India", "Indonesia", "Irak", "Irán", "Israel", "Jordania", "Kirguistán", 
+          "Kuwait", "Laos", "Líbano", "Malasia", "Maldivas", "Mongolia", "Myanmar", 
+          "Nepal", "Omán", "Pakistán", "Palestina", "Singapur", "Siria", "Sri Lanka", 
+          "Tayikistán", "Timor Oriental", "Turkmenistán", "Uzbekistán", "Vietnam", "Yemen",
+          # --- Oceanía ---
+          "Fiyi", "Islas Marshall", "Islas Salomón", "Kiribati", "Micronesia", "Nauru", 
+          "Nueva Zelanda", "Palaos", "Papúa Nueva Guinea", "Samoa", "Tonga", "Tuvalu", 
+          "Vanuatu", "Polinesia Francesa"
+        ]
 
     steps:
       - name: Descargar código del repo
