@@ -27,7 +27,7 @@ def parsear_destinos_nomades(ruta):
             elif linea.startswith("http"): tareas.append({"pais": pais_actual, "url": linea})
     return tareas
 
-async def ejecutar_civitatis(pais_objetivo):
+async def ejecutar_civitatis_operadores(pais_objetivo):
     # Cargamos solo el país que viene desde GitHub Actions
     destinos = cargar_destinos_civitatis([pais_objetivo])
     
@@ -42,7 +42,8 @@ async def ejecutar_civitatis(pais_objetivo):
     
     scraper = CivitatisScraper()
     await scraper.extract_list(destinos, nombre_archivo, currency_code="CLP")
-
+    
+"""   
 if __name__ == "__main__":
     if not os.path.exists('data'): os.makedirs('data')
     
@@ -53,8 +54,8 @@ if __name__ == "__main__":
     else:
         print("❌ Error: No se especificó un país.")
 
-"""       
-async def ejecutar_civitatis():
+    
+async def ejecutar_civitatis_operadores():
     PAISES = [
     "Argentina", "Bolivia", "Brasil", "Chile", "Colombia", "Costa Rica", 
     "Cuba", "Ecuador", "El Salvador", "Guatemala", "Haití", "Honduras", 
@@ -92,6 +93,24 @@ async def ejecutar_civitatis():
     # Tu scraper ya tiene el método _save_incremental que usa mode='a' (append)
     # así que esto escribirá línea por línea sin borrar lo anterior.
     await scraper.extract_list(destinos_pendientes, output, currency_code="CLP")
+"""
+async def ejecutar_civitatis_semanal():
+    PAISES = ["CHILE"] # Configurar
+    destinos = cargar_destinos_civitatis(PAISES)
+    pais_objetivo = PAISES[0]
+    timestamp = datetime.now().strftime("%Y%m%d")
+    
+    # Creamos un archivo CSV específico para este país
+    # Esto evita conflictos cuando varias máquinas intentan escribir el mismo archivo
+    nombre_archivo = f"data/precios_{pais_objetivo.lower()}_{timestamp}.csv"
+    
+    print(f"🚀 Iniciando scraping para {pais_objetivo} ({len(destinos)} destinos)")
+    
+    # LÓGICA DE CHECKPOINT (OPCIONAL PERO RECOMENDADA)
+    # Aquí podrías filtrar destinos que ya existan en nombre_archivo
+    
+    scraper = CivitatisScraperSemanal()
+    await scraper.extract_list(destinos, nombre_archivo, currency_code="CLP")
 
 async def ejecutar_nomades():
     tareas = parsear_destinos_nomades('destinos_nomades.txt')
@@ -110,9 +129,8 @@ if __name__ == "__main__":
     opcion = "1"
 
     if opcion == "1":
-        asyncio.run(ejecutar_civitatis())
+        asyncio.run(ejecutar_civitatis_semanal())
     elif opcion == "2":
         asyncio.run(ejecutar_nomades())
     else:
         print("Opción no válida.")
-"""
