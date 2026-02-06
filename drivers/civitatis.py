@@ -14,17 +14,18 @@ class CivitatisScraper(BaseScraper):
         "price": ".comfort-card__price__text",
         "rating": ".text--rating-total",
         "viajeros": "span._full",
-        "link": "a", # Selector genérico para encontrar el link dentro de la tarjeta
+        "link": "a", 
         "next_btn": "a.next-element",
         "view_all_btn": "a.button-list-footer",
         "cookie_btn": "#btn-accept-cookies, ._accept, .accept-button",
         
+        # --- SELECTORES NUEVOS PARA DESCRIPCIÓN ---
+        "full_description_container": "#descripcion", # Contenedor principal de la descripción
+        "view_more_trigger": "#view-more-trigger",    # Botón "Ver más" (si existe)
+
         # --- SELECTORES PARA DETALLE MULTI-OPERADOR ---
-        # El enlace que tiene el nombre del operador
         "provider_link": "a.o-answers-provider__name",
-        # El selector para encontrar el botón de contacto DENTRO del contenedor del operador
         "contact_btn_sub": "a.o-answers-provider__link", 
-        # Las líneas de texto dentro del contenedor
         "info_lines": ".o-answers-provider__info"
     }
 
@@ -32,9 +33,8 @@ class CivitatisScraper(BaseScraper):
         super().__init__()
         self.seen_items = set()
 
-    async def extract_list(self, lista_destinos, output_file, currency_code="CLP"):
+    async def extract_list(self, lista_destinos, output_file, currency_code="COP"):
         await self.init_browser(headless=True) 
-        # Esta es tu página PRINCIPAL (donde vive la lista)
         page_lista = await self.context.new_page()
         
         try:
@@ -43,8 +43,29 @@ class CivitatisScraper(BaseScraper):
             await self._handle_overlays(page_lista)
             await self._change_currency(page_lista, currency_code)
 
+            # --- NUEVA LÓGICA: DETECTAR LO YA PROCESADO ---
+            destinos_completados = set()
+            if os.path.exists(output_file):
+                try:
+                    # Leemos solo la columna 'destino' para saber qué ciudades ya están en el CSV
+                    # IMPORTANTE: Asegúrate de que 'sep' sea el mismo que usas al guardar (';' o ',')
+                    df_check = pd.read_csv(output_file, sep=';', usecols=['destino'])
+                    
+                    # Convertimos a un SET para búsqueda rápida
+                    destinos_completados = set(df_check['destino'].unique())
+                    print(f"🔄 RESUMIENDO: Se encontraron {len(destinos_completados)} destinos ya listos en el archivo.")
+                except Exception as e:
+                    print(f"⚠️ No se pudo leer el archivo para resumir (se empezará de cero): {e}")
+
+            # Filtramos la lista original para dejar solo lo que FALTA
+            # Comparamos d['name'] (del input) con lo que hay en el CSV
+            destinos_pendientes = [d for d in lista_destinos if d['name'] not in destinos_completados]
+            
+            print(f"📋 Destinos totales: {len(lista_destinos)} | Pendientes: {len(destinos_pendientes)}")
+            # -----------------------------------------------
+
             # 2. Bucle de Destinos
-            for destino in lista_destinos:
+            for destino in destinos_pendientes:
                 url_destino = f"https://www.civitatis.com/es/{destino['url']}/"
                 print(f"🌍 Procesando Destino: {destino['name']}")
                 
@@ -59,11 +80,10 @@ class CivitatisScraper(BaseScraper):
                         await page_lista.wait_for_load_state("networkidle")
                         await asyncio.sleep(1)
 
-                    # 3. Bucle de Paginación (Next page)
+                    # 3. Bucle de Paginación
                     while True:
                         await self._scroll_to_bottom(page_lista)
                         
-                        # Capturamos todas las tarjetas de la página actual
                         items = await page_lista.query_selector_all(self.SELECTORS["container"])
                         if not items:
                             print("⚠️ No se encontraron actividades.")
@@ -76,12 +96,10 @@ class CivitatisScraper(BaseScraper):
                             try:
                                 title = await self.get_safe_text(item, self.SELECTORS["title"])
                                 price = await self.get_safe_text(item, self.SELECTORS["price"])
+                                # Ya no sacamos descripción aquí, la sacaremos del detalle
                                 
                                 # --- CORRECCIÓN DE URL ---
-                                # 1. Buscamos el enlace 'a' dentro del título (es el más fiable)
                                 link_element = await item.query_selector(".comfort-card__title a")
-                                
-                                # 2. Si no está en el título, buscamos cualquier 'a' en la tarjeta que no sea vacío
                                 if not link_element:
                                     link_element = await item.query_selector("a:not([href='#'])")
 
@@ -89,14 +107,9 @@ class CivitatisScraper(BaseScraper):
                                 if link_element:
                                     href = await link_element.get_attribute("href")
                                     if href:
-                                        # urljoin maneja la magia:
-                                        # Si href es "/es/roma/tour", lo pega al dominio.
-                                        # Si href es "tour-coliseo/", lo pega a la carpeta actual.
                                         url_actividad = urljoin(page_lista.url, href)
 
-                                # Si falló todo, saltamos (no inventamos URLs porque fallan)
                                 if not url_actividad:
-                                    print(f"⚠️ No se encontró URL para: {title}")
                                     continue
 
                                 identifier = f"{destino['name']}-{title}".lower()
@@ -108,13 +121,10 @@ class CivitatisScraper(BaseScraper):
                                     viajeros = await self.get_safe_text(item, self.SELECTORS["viajeros"])
                                     rating = await self.get_safe_text(item, self.SELECTORS["rating"])
 
-                                    # --- CAMBIO PRINCIPAL AQUÍ ---
-                                    # Obtenemos la LISTA de operadores
-                                    lista_operadores_encontrados = await self._scrape_details_in_new_tab(url_actividad)
+                                    # --- CAMBIO PRINCIPAL: OBTENER TUPLA (OPERADORES, DESCRIPCIÓN) ---
+                                    lista_operadores_encontrados, descripcion_full = await self._scrape_details_in_new_tab(url_actividad)
 
-                                    # Creamos UNA FILA por cada operador encontrado
-                                    # Si la actividad tiene 2 operadores, se guardarán 2 filas en el CSV
-                                    # con la misma información de actividad pero distinto operador.
+                                    # Creamos una fila por cada operador, usando la misma descripción detallada
                                     for op_data in lista_operadores_encontrados:
                                         row = {
                                             "destino": destino['name'],
@@ -124,6 +134,7 @@ class CivitatisScraper(BaseScraper):
                                             "moneda": currency_code,
                                             "rating": rating,
                                             "viajeros": viajeros,
+                                            "descripcion": descripcion_full, # <--- AQUI VA LA DESCRIPCION DETALLADA
                                             # Datos variables del operador
                                             "operador": op_data["operador"],
                                             "email": op_data["email"],
@@ -139,11 +150,11 @@ class CivitatisScraper(BaseScraper):
                                 print(f"⚠️ Error procesando item individual: {e}")
                                 continue
                         
-                        # Guardamos el lote de esta página
+                        # Guardamos el lote
                         if items_data_batch:
                             self._save_incremental(items_data_batch, output_file)
 
-                        # Intentar ir a la siguiente página de la lista
+                        # Siguiente página
                         next_btn = await page_lista.query_selector(self.SELECTORS["next_btn"])
                         if next_btn and await next_btn.is_visible():
                             print("➡️ Pasando a siguiente página...")
@@ -163,61 +174,79 @@ class CivitatisScraper(BaseScraper):
 
     async def _scrape_details_in_new_tab(self, url):
         """
-        Entra a la actividad, busca TODOS los operadores listados y extrae su info.
-        Retorna una lista de diccionarios.
+        Entra a la actividad.
+        Retorna:
+            1. Una lista de diccionarios (operadores).
+            2. Un string con la descripción completa.
         """
         detail_page = await self.context.new_page()
-        lista_operadores = [] # Aquí guardaremos todos los encontrados
+        lista_operadores = [] 
+        description_text = "N/A" # Valor por defecto
         
         try:
-            # Bloqueamos recursos multimedia para velocidad
+            # Bloqueamos recursos multimedia (imágenes, fuentes, css) para velocidad extrema
             await detail_page.route("**/*.{png,jpg,jpeg,svg,css,woff,woff2}", lambda route: route.abort())
             await detail_page.goto(url, wait_until="domcontentloaded", timeout=20000)
             
-            # 1. Encontrar todos los enlaces de nombres de operadores
+            # --- 1. EXTRACCIÓN DE LA DESCRIPCIÓN ---
+            try:
+                # Borramos botón "Ver más"
+                await detail_page.evaluate(f"""() => {{
+                    const btn = document.querySelector('{self.SELECTORS["view_more_trigger"]}');
+                    if (btn) btn.remove();
+                }}""")
+
+                # Seleccionamos el contenedor
+                desc_el = await detail_page.query_selector(self.SELECTORS["full_description_container"])
+                if desc_el:
+                    # Obtenemos el texto
+                    raw_text = await desc_el.inner_text()
+                    
+                    # --- LIMPIEZA PROFUNDA ---
+                    # 1. Reemplazamos los saltos de línea por un separador visual (ej: " || ")
+                    cleaned_text = raw_text.replace("\n", " || ").replace("\r", "")
+                    
+                    # 2. Reemplazamos las comas del texto por puntos (opcional, para seguridad extra)
+                    # cleaned_text = cleaned_text.replace(",", ".") 
+                    
+                    # 3. Quitamos espacios dobles
+                    description_text = " ".join(cleaned_text.split())
+                    
+            except Exception as e_desc:
+                print(f"⚠️ No se pudo extraer descripción: {e_desc}")
+
+            # --- 2. EXTRACCIÓN DE OPERADORES (Tu lógica original) ---
             provider_links = await detail_page.query_selector_all(self.SELECTORS["provider_link"])
             
             if not provider_links:
-                # Si no hay lista explicita, intentamos buscar el texto genérico (fallback)
-                # ... lógica de fallback o retornar un operador vacío ...
                 lista_operadores.append({
                     "operador": "No especificado / Único",
                     "email": "N/A", "telefono": "N/A", "direccion": "N/A"
                 })
             else:
-                # 2. Iterar sobre cada operador encontrado
                 for link in provider_links:
                     datos = {"operador": "N/A", "email": "N/A", "telefono": "N/A", "direccion": "N/A"}
-                    
                     try:
-                        # Extraer nombre
                         nombre = await link.inner_text()
                         datos["operador"] = nombre.strip()
-                        
-                        # Obtener el ID del contenedor de detalles (data-dropdow-target)
                         target_id = await link.get_attribute("data-dropdow-target")
                         
                         if target_id:
-                            # Hacemos clic en el nombre para desplegar (por si acaso no está visible)
+                            # Click JS forzado por si el elemento visual está tapado
                             if await link.is_visible():
                                 await link.click()
-                                await asyncio.sleep(0.3) # Pequeña pausa UI
+                                await asyncio.sleep(0.3)
                             
-                            # Seleccionamos el contenedor específico usando el ID
                             container_selector = f"#{target_id}"
                             container = await detail_page.query_selector(container_selector)
                             
                             if container:
-                                # Buscar botón de contacto DENTRO de este contenedor
                                 contact_btn = await container.query_selector("a:has-text('Información de contacto')")
-                                
                                 if contact_btn and await contact_btn.is_visible():
                                     await contact_btn.click()
                                     await asyncio.sleep(0.3)
                                 
-                                # Extraer líneas de información SOLO de este contenedor
                                 info_lines = await container.query_selector_all(self.SELECTORS["info_lines"])
-                                
                                 for linea in info_lines:
                                     txt = (await linea.inner_text()).strip()
                                     low = txt.lower()
@@ -233,9 +262,7 @@ class CivitatisScraper(BaseScraper):
                                         else:
                                             datos["direccion"] += f" | {info_limpia}"
                         
-                        # Guardamos este operador en la lista
                         lista_operadores.append(datos)
-                        
                     except Exception as e:
                         print(f"⚠️ Error extrayendo un operador: {e}")
                         continue
@@ -246,14 +273,29 @@ class CivitatisScraper(BaseScraper):
         finally:
             await detail_page.close()
             
-        return lista_operadores
+        return lista_operadores, description_text # <--- RETORNA LA TUPLA AHORA
 
     def _save_incremental(self, data, filename):
         if not data: return
         df = pd.DataFrame(data)
         file_exists = os.path.isfile(filename)
-        # Modo 'a' (append) agrega al final sin borrar lo anterior
-        df.to_csv(filename, mode='a', index=False, header=not file_exists, encoding='utf-8-sig')
+        
+        # CAMBIOS AQUÍ:
+        # 1. sep=';' -> Usa punto y coma como separador (mejor para español)
+        # 2. quoting=1 -> (csv.QUOTE_ALL) Pone comillas a TODO para proteger el texto
+        # 3. escapechar='\\' -> Escapa caracteres raros
+        
+        import csv # Asegúrate de importar csv arriba si no lo has hecho
+        
+        df.to_csv(
+            filename, 
+            mode='a', 
+            index=False, 
+            header=not file_exists, 
+            encoding='utf-8-sig', 
+            sep=';',           # <--- CAMBIO CLAVE
+            quoting=csv.QUOTE_ALL # <--- FUERZA COMILLAS EN TODO
+        )
 
     async def _change_currency(self, page, currency_code):
         try:

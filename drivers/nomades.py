@@ -26,7 +26,7 @@ class NomadesScraper(BaseScraper):
             for tarea in lista_tareas:
                 print(f"🚀 Procesando Nomades: {tarea['url']} ({tarea['pais']})")
                 try:
-                    await page.goto(tarea['url'], wait_until="networkidle", timeout=60000)
+                    await page.goto(tarea['url'], wait_until="domcontentloaded", timeout=60000)
                     
                     # Nomades suele ser carga dinámica, aseguramos scroll
                     await self._scroll_to_bottom(page)

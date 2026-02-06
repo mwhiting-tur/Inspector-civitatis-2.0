@@ -1,0 +1,43 @@
+name: Scrape Civitatis Multi-Pais
+
+# Se activa manualmente
+on:
+  workflow_dispatch:
+
+jobs:
+  scrape-matrix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350 # Casi 6 horas de límite
+    
+    strategy:
+      # Matriz para correr 5 países a la vez en paralelo
+      matrix:
+        pais: ["Chile", "México", "Perú", "Brasil", "Argentina"]
+      # Si uno falla (ej: Brasil), que los demás sigan trabajando
+      fail-fast: false
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias
+        run: |
+          pip install pandas playwright
+          playwright install chromium
+          playwright install-deps
+
+      # AQUÍ ESTÁ EL CAMBIO CLAVE: Ejecutamos 'civitatis_runner.py'
+      - name: Correr Scraper para ${{ matrix.pais }}
+        run: python reviews.py "${{ matrix.pais }}"
+
+      - name: Subir CSV resultante
+        uses: actions/upload-artifact@v4
+        with:
+          name: reviews-${{ matrix.pais }}
+          path: reviews_*.csv
+          if-no-files-found: warn

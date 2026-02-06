@@ -1,0 +1,28 @@
+./__pycache__
+__pycache__
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+env/
+.env
+
+# --- IDEs y Sistema Operativo ---
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+# --- Salidas del Scraper (IMPORTANTE) ---
+# Esto evita que subas accidentalmente los CSV de 200MB a GitHub
+# y mantiene tu historial limpio.
+*.csv
+*.xlsx
+*.json
+
+# --- EXCEPCIONES ---
+# Como 'destinos_civitatis.json' es necesario para que el script funcione,
+# le decimos a git que NO lo ignore (el signo de exclamación invierte la regla).
+!destinos_civitatis.json
