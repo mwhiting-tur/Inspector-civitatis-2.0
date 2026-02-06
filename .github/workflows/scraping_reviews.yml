@@ -25,13 +25,18 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Instalar dependencias
+      - name: Instalar dependencias de Python
         run: |
-          pip install pandas playwright
-          playwright install chromium
-          playwright install-deps
+          python -m pip install --upgrade pip
+          pip install playwright pandas
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
-      # AQUÍ ESTÁ EL CAMBIO CLAVE: Ejecutamos 'civitatis_runner.py'
+      - name: Instalar Navegador y Dependencias de Sistema
+        run: |
+          # Usar 'python -m' asegura que encuentre Playwright donde se instaló
+          python -m playwright install chromium --with-deps
+
+      # AQUÍ ESTÁ EL CAMBIO CLAVE: Ejecutamos 'reviews.py'
       - name: Correr Scraper para ${{ matrix.pais }}
         run: python reviews.py "${{ matrix.pais }}"
 
