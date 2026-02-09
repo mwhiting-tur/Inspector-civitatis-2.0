@@ -83,9 +83,16 @@ class CivitatisOptimizedScraper:
 
         async with async_playwright() as p:
             # Lanzamos navegador con argumentos para evitar bloqueos en Docker/GitHub
-            browser = await p.chromium.launch(
+            """browser = await p.chromium.launch(
                 headless=True, 
                 args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage"]
+            )
+            browser = await p.chromium.launch(
+                executable_path=r"C:\Program Files\Google\Chrome\Application\chrome.exe", # Ruta típica
+                headless=True )"""
+            browser = await p.chromium.launch(
+                headless=True,
+                args=["--disable-gpu", "--no-sandbox"] # Recomendado para servidores Linux
             )
             
             # Contexto único
