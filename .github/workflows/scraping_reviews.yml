@@ -12,7 +12,7 @@ jobs:
     strategy:
       # Matriz para correr 5 países a la vez en paralelo
       matrix:
-        pais: ["Chile", "México", "Perú", "Brasil", "Argentina"]
+        pais: ["México", "Perú", "Brasil", "Argentina"]
       # Si uno falla (ej: Brasil), que los demás sigan trabajando
       fail-fast: false
 

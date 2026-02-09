@@ -5,6 +5,269 @@ import os
 import csv
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
+from playwright.async_api import async_playwright
+
+# --- CONFIGURACIÓN ---
+CONCURRENCIA_MAXIMA = 5  # Número de pestañas abiertas al mismo tiempo (5 es seguro para GitHub Actions)
+DIAS_LIMITE = 730        # 2 años
+
+# --- TRADUCCIÓN DE MESES ---
+MESES_ES = {
+    "ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
+    "jul": 7, "ago": 8, "sep": 9, "oct": 10, "nov": 11, "dic": 12
+}
+
+def parsear_fecha_civitatis(texto_fecha):
+    try:
+        texto = texto_fecha.strip()
+        partes = texto.split('/')
+        if len(partes) != 3: return None
+        dia = int(partes[0].strip())
+        mes_txt = partes[1].strip().lower()[:3]
+        anio = int(partes[2].strip())
+        numero_mes = MESES_ES.get(mes_txt, 1)
+        return datetime(anio, numero_mes, dia)
+    except:
+        return None
+
+def cargar_destinos_civitatis(paises):
+    try:
+        with open('destinos_civitatis.json', 'r', encoding='utf-8') as f:
+            todos = json.load(f)
+        paises_lower = [p.lower() for p in paises]
+        return [d for d in todos if d.get('nameCountry', '').lower() in paises_lower]
+    except Exception as e:
+        print(f"❌ Error leyendo JSON: {e}")
+        return []
+
+class CivitatisOptimizedScraper:
+    SELECTORS = {
+        "container": ".o-search-list__item",
+        "title": ".comfort-card__title",
+        "link": ".comfort-card__title a",
+        "next_btn_list": "a.next-element",
+        "view_all_btn": "a.button-list-footer",
+        
+        "review_container": ".o-container-opiniones-small",
+        "location": ".opi-location",
+        "date_text": ".a-opiniones-date",
+        "next_btn_reviews": ".o-pagination .next-element:not(.--deactivated)",
+        
+        "cookie_btn": "#btn-accept-cookies, ._accept, .accept-button",
+    }
+
+    def __init__(self, output_file):
+        self.output_file = output_file
+        self.fecha_corte = datetime.now() - timedelta(days=DIAS_LIMITE)
+        self.semaphore = asyncio.Semaphore(CONCURRENCIA_MAXIMA) # Controla el tráfico
+
+    async def run(self, nombre_pais):
+        # Crear CSV si no existe
+        if not os.path.exists(self.output_file):
+            encabezados = ["pais", "destino", "actividad", "url_actividad", "fecha", "pais_usuario"]
+            pd.DataFrame(columns=encabezados).to_csv(
+                self.output_file, sep=';', index=False, encoding='utf-8-sig', quoting=csv.QUOTE_MINIMAL
+            )
+
+        print(f"🚀 Iniciando scraper TURBO para: {nombre_pais}")
+        destinos = cargar_destinos_civitatis([nombre_pais])
+        print(f"✅ {len(destinos)} destinos encontrados.")
+
+        async with async_playwright() as p:
+            # Lanzamos browser ligero
+            browser = await p.chromium.launch(headless=True, args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-gl-drawing-for-tests"])
+            
+            # Contexto persistente para no re-loguear cookies (aunque bloqueamos todo)
+            context = await browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            )
+            
+            # BLOQUEO DE RECURSOS GLOBAL (La clave de la velocidad)
+            await context.route("**/*", self._block_heavy_resources)
+
+            for destino in destinos:
+                await self._procesar_destino(context, nombre_pais, destino)
+
+            await browser.close()
+
+    async def _block_heavy_resources(self, route):
+        """Bloquea imágenes, fuentes, CSS y trackers."""
+        excluded_types = ["image", "media", "font", "stylesheet"]
+        # Bloquear también dominios de tracking comunes si aparecen en la URL
+        bad_domains = ["google-analytics", "doubleclick", "facebook", "criteo"]
+        
+        if route.request.resource_type in excluded_types or any(d in route.request.url for d in bad_domains):
+            await route.abort()
+        else:
+            await route.continue_()
+
+    async def _procesar_destino(self, context, pais, destino_obj):
+        page = await context.new_page()
+        actividades = []
+        nombre_destino = destino_obj['name']
+        url = f"https://www.civitatis.com/es/{destino_obj['url']}/"
+
+        print(f"\n🌍 {nombre_destino.upper()}: Buscando actividades...")
+        
+        try:
+            # 1. Obtener lista de actividades (Secuencial, rápido)
+            actividades = await self._get_activities_list(page, url)
+        except Exception as e:
+            print(f"⚠️ Error listando {nombre_destino}: {e}")
+        finally:
+            await page.close()
+
+        print(f"   ↳ {len(actividades)} actividades. Procesando en paralelo (Max {CONCURRENCIA_MAXIMA})...")
+
+        # 2. Procesar actividades en PARALELO
+        tasks = []
+        for act in actividades:
+            base_data = {
+                "pais": pais, 
+                "destino": nombre_destino, 
+                "actividad": act['titulo'], 
+                "url_actividad": act['url']
+            }
+            # Creamos la tarea pero no la ejecutamos aún, asyncio.gather lo hará
+            tasks.append(self._scrape_activity_concurrent(context, base_data))
+        
+        # Ejecutar en lotes concurrentes
+        await asyncio.gather(*tasks)
+
+    async def _get_activities_list(self, page, url):
+        actividades = []
+        await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+        
+        # Click "Ver todo" rápido con JS
+        try:
+            await page.evaluate(f"""() => {{
+                const btn = document.querySelector('{self.SELECTORS["view_all_btn"]}');
+                if(btn) btn.click();
+            }}""")
+            await asyncio.sleep(1) # Breve espera
+        except: pass
+
+        while True:
+            # Scroll rápido al fondo
+            await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+            
+            items = await page.query_selector_all(self.SELECTORS["container"])
+            if not items: break
+
+            for item in items:
+                try:
+                    title_el = await item.query_selector(self.SELECTORS["title"])
+                    link_el = await item.query_selector(self.SELECTORS["link"])
+                    if not link_el: link_el = await item.query_selector("a:not([href='#'])")
+                    
+                    if title_el and link_el:
+                        t = (await title_el.inner_text()).strip()
+                        h = await link_el.get_attribute("href")
+                        if h:
+                            actividades.append({"titulo": t, "url": urljoin(url, h)})
+                except: continue
+
+            # Siguiente página
+            next_btn = await page.query_selector(self.SELECTORS["next_btn_list"])
+            if next_btn and await next_btn.is_visible():
+                await page.evaluate("(el) => el.click()", next_btn)
+                await page.wait_for_load_state("domcontentloaded") # Espera más ligera que networkidle
+            else:
+                break
+        return actividades
+
+    async def _scrape_activity_concurrent(self, context, base_data):
+        """Función que corre dentro del Semáforo para no saturar."""
+        async with self.semaphore:
+            page = await context.new_page()
+            try:
+                await self._scrape_reviews_logic(page, base_data)
+            except Exception as e:
+                pass # Ignorar errores individuales para no detener el lote
+            finally:
+                await page.close()
+
+    async def _scrape_reviews_logic(self, page, base_data):
+        url = base_data['url_actividad']
+        url_opiniones = f"{url}opiniones/" if not url.endswith("opiniones/") else url
+        if not url_opiniones.endswith("/") and "opiniones" not in url_opiniones:
+             url_opiniones = f"{url}/opiniones/"
+
+        await page.goto(url_opiniones, wait_until="domcontentloaded", timeout=45000)
+        
+        # Borrado de overlays ultra-rápido
+        await page.evaluate('() => { document.querySelectorAll(".lottie-reveal-overlay, #lottie-modal, ._cookies-banner, #didomi-host").forEach(el => el.remove()); }')
+
+        if "opiniones" not in page.url: return
+
+        while True:
+            batch = []
+            elements = await page.query_selector_all(self.SELECTORS["review_container"])
+            if not elements: break
+
+            for el in elements:
+                try:
+                    date_el = await el.query_selector(self.SELECTORS["date_text"])
+                    date_text = await date_el.inner_text() if date_el else ""
+                    fecha_dt = parsear_fecha_civitatis(date_text)
+                    
+                    # Filtro de fecha
+                    if fecha_dt:
+                        if fecha_dt < self.fecha_corte: continue
+                        fecha_csv = fecha_dt.strftime("%Y-%m-%d")
+                    else:
+                        fecha_csv = date_text
+
+                    # Extracción País
+                    loc_el = await el.query_selector(self.SELECTORS["location"])
+                    if loc_el:
+                        raw_loc = await loc_el.inner_text()
+                        pais_usuario = raw_loc.replace("-", ",").replace("\n", " ").split(",")[-1].strip()
+                    else:
+                        pais_usuario = "N/A"
+
+                    batch.append({
+                        **base_data,
+                        "fecha": fecha_csv,
+                        "pais_usuario": pais_usuario
+                    })
+                except: continue
+
+            self._save_incremental(batch)
+
+            # Paginación JS Click
+            next_btn = await page.query_selector(self.SELECTORS["next_btn_reviews"])
+            if next_btn and await next_btn.is_visible():
+                await page.evaluate("(el) => el.click()", next_btn)
+                # Espera manual corta en lugar de networkidle
+                await asyncio.sleep(0.5) 
+            else:
+                break
+
+    def _save_incremental(self, data):
+        if not data: return
+        df = pd.DataFrame(data)
+        file_exists = os.path.isfile(self.output_file)
+        try:
+            df.to_csv(self.output_file, mode='a', index=False, header=not file_exists, 
+                     encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_MINIMAL)
+        except: pass
+
+if __name__ == "__main__":
+    import sys
+    PAIS = sys.argv[1] if len(sys.argv) > 1 else "Chile"
+    OUTPUT = f"reviews_{PAIS.lower().replace(' ', '_')}_paises.csv"
+    
+    scraper = CivitatisOptimizedScraper(OUTPUT)
+    asyncio.run(scraper.run(PAIS))
+"""
+import asyncio
+import pandas as pd
+import json
+import os
+import csv
+from datetime import datetime, timedelta
+from urllib.parse import urljoin
 from drivers.base_driver import BaseScraper 
 
 # --- DICCIONARIO PARA TRADUCIR MESES ---
@@ -14,9 +277,6 @@ MESES_ES = {
 }
 
 def parsear_fecha_civitatis(texto_fecha):
-    """
-    Convierte '24 / Jun / 2024' -> objeto datetime
-    """
     try:
         texto = texto_fecha.strip()
         partes = texto.split('/')
@@ -268,3 +528,5 @@ if __name__ == "__main__":
     
     scraper = CivitatisCountryReviewScraper()
     asyncio.run(scraper.run_country_scraping(PAIS, nombre_archivo))
+
+"""
