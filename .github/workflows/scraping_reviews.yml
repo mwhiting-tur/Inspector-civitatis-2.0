@@ -38,7 +38,7 @@ jobs:
 
       # AQUÍ ESTÁ EL CAMBIO CLAVE: Ejecutamos 'reviews.py'
       - name: Correr Scraper para ${{ matrix.pais }}
-        run: python reviews.py "${{ matrix.pais }}"
+        run: python -u reviews.py "${{ matrix.pais }}"
 
       - name: Subir CSV resultante
         uses: actions/upload-artifact@v4
