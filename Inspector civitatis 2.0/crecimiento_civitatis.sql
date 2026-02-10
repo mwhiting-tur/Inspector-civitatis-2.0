@@ -13,7 +13,7 @@ SELECT
 
 FROM destinos actual
 JOIN destinos pasada ON actual.id = pasada.id
-WHERE pasada.snapshot_date = '2025-12-31' 
+WHERE pasada.snapshot_date = '2026-01-29' 
   AND actual.snapshot_date = (SELECT MAX(snapshot_date) FROM destinos)
   AND actual.nameCountry IN ('Chile', 'Argentina', 'Brasil', 'Colombia', 'México', 'Perú')
 ORDER BY actual.nameCountry ASC, crecimiento_personas DESC;
@@ -36,7 +36,7 @@ SELECT
 
 FROM destinos actual
 JOIN destinos pasada ON actual.id = pasada.id
-WHERE pasada.snapshot_date = '2025-12-31' 
+WHERE pasada.snapshot_date = '2026-01-29' 
   AND actual.snapshot_date = (SELECT MAX(snapshot_date) FROM destinos)
   AND actual.nameCountry IN ('Chile', 'Argentina', 'Brasil', 'Colombia', 'México', 'Perú')
 GROUP BY actual.nameCountry

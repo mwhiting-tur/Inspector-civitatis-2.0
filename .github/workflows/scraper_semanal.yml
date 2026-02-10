@@ -1,0 +1,50 @@
+name: Ejecutar Scraping Semanal
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  run-scraper:
+    # Forzamos 22.04 que es la versión más estable para Playwright
+    runs-on: ubuntu-22.04 
+    strategy:
+      fail-fast: false
+      max-parallel: 15
+      matrix:
+        country: [
+          "Chile", "México", "Perú", "Colombia", "Argentina", "Brasil"
+        ]
+
+    steps:
+      - name: Descargar código del repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias de Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright pandas
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Instalar Navegador y Dependencias de Sistema
+        run: |
+          # Usar 'python -m' asegura que encuentre Playwright donde se instaló
+          python -m playwright install chromium --with-deps
+
+      - name: Ejecutar el script por país
+        # Le pasamos el nombre del país de la matriz como argumento
+        run: python main.py "${{ matrix.country }}"
+
+      - name: Guardar cambios (Archivo individual por país)
+        if: always()
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git pull origin main --rebase
+          git add data/
+          git commit -m "Datos actualizados: ${{ matrix.country }}" || exit 0
+          git push

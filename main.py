@@ -126,10 +126,10 @@ if __name__ == "__main__":
     print("1. Ejecutar Scraper Civitatis")
     print("2. Ejecutar Scraper Nomades")
     #opcion = input("Selecciona una opción (1 o 2): ")
-    opcion = "2"
+    opcion = "1"
 
     if opcion == "1":
-        asyncio.run(ejecutar_civitatis_operadores("Colombia"))
+        asyncio.run(ejecutar_civitatis_semanal())
     elif opcion == "2":
         asyncio.run(ejecutar_nomades())
     else:
