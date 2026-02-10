@@ -50,7 +50,7 @@ class CivitatisTurboScraper:
         "next_btn_list": "a.next-element",
         "view_all_btn": "a.button-list-footer",
         "review_container": ".o-container-opiniones-small", 
-        "location": ".opi-location",                        
+        "location": ".opi-location",                         
         "date_text": ".a-opiniones-date",                   
         "next_btn_reviews": ".o-pagination .next-element:not(.--deactivated)",
     }
@@ -107,14 +107,15 @@ class CivitatisTurboScraper:
     async def _procesar_destino_completo(self, context, pais, destino_obj):
         page = await context.new_page()
         nombre_destino = destino_obj['name']
-        url = f"https://www.civitatis.com/es/{destino_obj['url']}/"
+        # La URL base siempre termina en slash, ej: .../es/rio-de-janeiro/
+        url_destino_base = f"https://www.civitatis.com/es/{destino_obj['url']}/"
         actividades = []
 
         print(f"\n🌍 {nombre_destino.upper()}: Buscando actividades...", flush=True)
         
         try:
             # Lista de actividades (Secuencial)
-            actividades = await self._get_activities_list(page, url)
+            actividades = await self._get_activities_list(page, url_destino_base)
         except Exception as e:
             print(f"⚠️ Error listando {nombre_destino}: {e}", flush=True)
         finally:
@@ -122,7 +123,7 @@ class CivitatisTurboScraper:
 
         if not actividades: return
 
-        print(f"   ↳ {len(actividades)} actividades. Procesando en paralelo...", flush=True)
+        print(f"   ↳ {len(actividades)} actividades válidas (Filtradas por URL). Procesando...", flush=True)
 
         # Crear tareas concurrentes
         tareas = []
@@ -137,11 +138,11 @@ class CivitatisTurboScraper:
         # Ejecutar lote
         await asyncio.gather(*tareas)
 
-    async def _get_activities_list(self, page, url):
+    async def _get_activities_list(self, page, url_destino_base):
         actividades = []
         try:
             # Usamos domcontentloaded en vez de networkidle para evitar bloqueos
-            await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+            await page.goto(url_destino_base, wait_until="domcontentloaded", timeout=60000)
             
             # Limpieza rápida JS
             await page.evaluate("() => { document.querySelectorAll('.lottie-reveal-overlay, #lottie-modal, ._cookies-banner').forEach(e => e.remove()); }")
@@ -165,8 +166,19 @@ class CivitatisTurboScraper:
                         if title_el and link_el:
                             title = (await title_el.inner_text()).strip()
                             href = await link_el.get_attribute("href")
+                            
                             if href:
-                                actividades.append({"titulo": title, "url": urljoin(url, href)})
+                                full_url = urljoin(url_destino_base, href)
+                                
+                                # --- FILTRO DE URL ---
+                                # Solo aceptamos la actividad si la URL comienza con la URL del destino.
+                                # Ejemplo válido: .../es/rio-de-janeiro/tour-pan-de-azucar/
+                                # Ejemplo inválido: .../es/niteroi/tour-niteroi/ (aunque aparezca en la página de Río)
+                                # Ejemplo inválido: .../es/tarjeta-esim-brasil/ (no tiene el slug del destino)
+                                if full_url.startswith(url_destino_base) and full_url != url_destino_base:
+                                    actividades.append({"titulo": title, "url": full_url})
+                                # ---------------------
+                                
                     except: continue
 
                 next_btn = await page.query_selector(self.SELECTORS["next_btn_list"])
@@ -244,7 +256,7 @@ class CivitatisTurboScraper:
         try:
             df = pd.DataFrame(data)
             df.to_csv(self.output_file, mode='a', index=False, header=False, 
-                     encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_MINIMAL)
+                      encoding='utf-8-sig', sep=';', quoting=csv.QUOTE_MINIMAL)
         except: pass
 
 if __name__ == "__main__":
