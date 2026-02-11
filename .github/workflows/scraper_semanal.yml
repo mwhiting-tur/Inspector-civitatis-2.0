@@ -47,13 +47,9 @@ jobs:
         # Pasamos DOS argumentos: País y Moneda
         run: python main_semanal.py "${{ matrix.country }}" "${{ matrix.currency }}"
 
-      - name: Guardar cambios (Archivo individual por país)
-        if: always()
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git pull origin main --rebase
-          git add data/
-          # Hacemos commit solo si hay cambios
-          git commit -m "Datos actualizados: ${{ matrix.country }} (${{ matrix.currency }})" || echo "Sin cambios para commitear"
-          git push
+      - name: Subir CSV resultante
+        uses: actions/upload-artifact@v4
+        with:
+          name: scraper_semanal-${{ matrix.country }}
+          path: scaper_semanal_*.csv
+          if-no-files-found: warn
