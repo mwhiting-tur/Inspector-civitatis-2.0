@@ -50,6 +50,6 @@ jobs:
       - name: Subir CSV resultante
         uses: actions/upload-artifact@v4
         with:
-          name: scraper_semanal-${{ matrix.country }}
-          path: scaper_semanal_*.csv
+          name: precios-${{ matrix.country }}
+          path: precios_*.csv
           if-no-files-found: warn
