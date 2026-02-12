@@ -86,85 +86,93 @@ class CivitatisScraperSemanal(BaseScraper):
                 print(f"📍 Procesando Destino: {destino['name']} ({destino['nameCountry']})")
                 
                 try:
+                    # 1. Navegación Robusta
                     await page.goto(url_destino, wait_until="networkidle", timeout=60000)
                     await self._handle_overlays(page)
 
+                    # 2. Click en "Ver todo" con espera
                     view_all = await page.query_selector(self.SELECTORS["view_all_btn"])
                     if view_all and await view_all.is_visible():
                         await page.evaluate("(el) => el.click()", view_all)
                         await page.wait_for_load_state("networkidle")
-                        await asyncio.sleep(1)
+                        await asyncio.sleep(2) # Pausa de seguridad
+
+                    # 3. ESPERA CRÍTICA: Asegurar que hay tarjetas antes de empezar el bucle
+                    try:
+                        await page.wait_for_selector(self.SELECTORS["container"], state="attached", timeout=15000)
+                    except:
+                        print(f"⚠️ No se detectaron actividades para {destino['name']}. Saltando...")
+                        continue
 
                     while True:
                         await self._handle_overlays(page)
                         await self._scroll_to_bottom(page)
                         
-                        try:
-                            await page.wait_for_selector(self.SELECTORS["container"], timeout=8000)
-                        except:
-                            break
-
                         items = await page.query_selector_all(self.SELECTORS["container"])
+                        if not items: break
+
                         pagina_data = []
                         
                         for item in items:
-                            actividad = await self.get_safe_text(item, self.SELECTORS["title"])
-                            
-                            # Obtención de URL
-                            link_element = await item.query_selector(".comfort-card__title a")
-                            if not link_element:
-                                link_element = await item.query_selector("a:not([href='#'])")
+                            try:
+                                actividad = await self.get_safe_text(item, self.SELECTORS["title"])
+                                
+                                # Obtención de URL
+                                link_element = await item.query_selector(".comfort-card__title a")
+                                if not link_element:
+                                    link_element = await item.query_selector("a:not([href='#'])")
 
-                            url_actividad = None
-                            if link_element:
-                                href = await link_element.get_attribute("href")
-                                if href:
-                                    url_actividad = urljoin(page.url, href)
+                                url_actividad = None
+                                if link_element:
+                                    href = await link_element.get_attribute("href")
+                                    if href:
+                                        url_actividad = urljoin(page.url, href)
 
-                            if not url_actividad:
-                                continue
+                                if not url_actividad:
+                                    continue
 
-                            # Validación de URL (slug del destino debe estar en la url de la actividad)
-                            if destino['url'] not in url_actividad:
-                                continue
-                            
-                            precio_real_txt = await self.get_safe_text(item, self.SELECTORS["price"])
-                            
-                            identifier = f"{destino['name']}-{actividad}-{precio_real_txt}".lower().strip()
-                            
-                            if identifier not in self.seen_items:
-                                precio_old_txt = await self.get_safe_text(item, self.SELECTORS["price_old"])
-                                opiniones_txt = await self.get_safe_text(item, self.SELECTORS["rating_opiniones"])
-                                viajeros_txt = await self.get_safe_text(item, self.SELECTORS["viajeros"])
-                                # Extraer Rating (Puntaje)
-                                rating_txt = await self.get_safe_text(item, self.SELECTORS["rating_val"])
+                                # 4. Validación de URL (CASE INSENSITIVE y robusta)
+                                if destino['url'].lower() not in url_actividad.lower():
+                                    continue
+                                if url_actividad == url_destino: # Evitar la URL base
+                                    continue
+                                
+                                precio_real_txt = await self.get_safe_text(item, self.SELECTORS["price"])
+                                
+                                identifier = f"{destino['name']}-{actividad}-{precio_real_txt}".lower().strip()
+                                
+                                if identifier not in self.seen_items:
+                                    precio_old_txt = await self.get_safe_text(item, self.SELECTORS["price_old"])
+                                    opiniones_txt = await self.get_safe_text(item, self.SELECTORS["rating_opiniones"])
+                                    viajeros_txt = await self.get_safe_text(item, self.SELECTORS["viajeros"])
+                                    rating_txt = await self.get_safe_text(item, self.SELECTORS["rating_val"])
 
-                                pagina_data.append({
-                                    "moneda": currency_code,
-                                    "pais": destino['nameCountry'],
-                                    "destino": destino['name'],
-                                    "actividad": actividad,
-                                    "url_fuente": url_actividad,
-                                    "fuente": "Civitatis",
-                                    "fecha_scan": datetime.now().strftime("%Y-%m-%d"),
-                                    
-                                    # Métricas limpias
-                                    "precio_desde_original": self._clean_data(precio_old_txt, 'float'),
-                                    "precio_real": self._clean_data(precio_real_txt, 'float'),
-                                    "opiniones": self._clean_data(opiniones_txt, 'int'), # Cantidad de opiniones
-                                    "viajeros": self._clean_data(viajeros_txt, 'int'),
-                                    "rating": self._clean_rating(rating_txt) # Puntaje (ej: 9.1)
-                                })
-                                self.seen_items.add(identifier)
+                                    pagina_data.append({
+                                        "moneda": currency_code,
+                                        "pais": destino['nameCountry'],
+                                        "destino": destino['name'],
+                                        "actividad": actividad,
+                                        "url_fuente": url_actividad,
+                                        "fuente": "Civitatis",
+                                        "fecha_scan": datetime.now().strftime("%Y-%m-%d"),
+                                        "precio_desde_original": self._clean_data(precio_old_txt, 'float'),
+                                        "precio_real": self._clean_data(precio_real_txt, 'float'),
+                                        "opiniones": self._clean_data(opiniones_txt, 'int'),
+                                        "viajeros": self._clean_data(viajeros_txt, 'int'),
+                                        "rating": self._clean_rating(rating_txt)
+                                    })
+                                    self.seen_items.add(identifier)
+                            except: continue
 
                         if pagina_data:
                             self._save_incremental(pagina_data, output_file)
 
+                        # Paginación
                         next_btn = await page.query_selector(self.SELECTORS["next_btn"])
                         if next_btn and await next_btn.is_visible():
                             await page.evaluate("(el) => el.click()", next_btn)
-                            await asyncio.sleep(2)
                             await page.wait_for_load_state("networkidle")
+                            await asyncio.sleep(1)
                         else:
                             break
                             
