@@ -140,25 +140,44 @@ class CivitatisTurboScraper:
 
     async def _get_activities_list(self, page, url_destino_base, slug_destino):
         """
-        Recorre la paginación y extrae URLs, validando que contengan el slug del destino.
+        Recorre la paginación y extrae URLs, con esperas robustas y debug.
         """
         actividades = []
         try:
-            await page.goto(url_destino_base, wait_until="domcontentloaded", timeout=60000)
+            # 1. Navegación con espera de red (más segura que domcontentloaded)
+            await page.goto(url_destino_base, wait_until="networkidle", timeout=60000)
             
-            # Limpieza rápida JS
-            await page.evaluate("() => { document.querySelectorAll('.lottie-reveal-overlay, #lottie-modal, ._cookies-banner').forEach(e => e.remove()); }")
+            # 2. Limpieza agresiva de popups
+            await page.evaluate("() => { document.querySelectorAll('.lottie-reveal-overlay, #lottie-modal, ._cookies-banner, #didomi-host').forEach(e => e.remove()); }")
             
-            # Expandir "Ver todo"
+            # 3. Intentar expandir la lista (Click en "Ver todo")
             try:
-                await page.click(self.SELECTORS["view_all_btn"], timeout=2000)
+                view_all = await page.query_selector(self.SELECTORS["view_all_btn"])
+                if view_all and await view_all.is_visible():
+                    print("     🖱️ Click en 'Ver todas las actividades'...", flush=True)
+                    await view_all.click()
+                    await page.wait_for_load_state("networkidle") # Esperar que cargue tras el click
             except: pass
 
+            # 4. ESPERA CRÍTICA: Esperar a que aparezcan las tarjetas
+            try:
+                await page.wait_for_selector(self.SELECTORS["container"], timeout=10000)
+            except:
+                print(f"     ⚠️ No se detectaron tarjetas de actividad (Selector: {self.SELECTORS['container']})", flush=True)
+                return []
+
             while True:
+                # Scroll para cargar lazy-loading images/items
                 await page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
+                await asyncio.sleep(1) # Pequeña pausa para el renderizado
+                
                 items = await page.query_selector_all(self.SELECTORS["container"])
                 if not items: break
 
+                # DEBUG: Ver cuántos items crudos ve el scraper
+                # print(f"     🔍 Escaneando {len(items)} items en esta página...", flush=True)
+
+                nuevos_encontrados = 0
                 for item in items:
                     try:
                         title_el = await item.query_selector(self.SELECTORS["title"])
@@ -172,25 +191,34 @@ class CivitatisTurboScraper:
                             if href:
                                 full_url = urljoin(url_destino_base, href)
                                 
-                                # --- MODIFICACIÓN: FILTRO DE URL ---
-                                # 1. Evitar la propia URL del destino
+                                # --- FILTROS DE SEGURIDAD ---
+                                
+                                # 1. Ignorar la misma URL base
                                 if full_url == url_destino_base:
                                     continue
                                 
-                                # 2. Validar que el slug del JSON (ej: 'santiago-de-chile') esté en la URL
-                                if slug_destino not in full_url:
+                                # 2. Validar Slug (CASE INSENSITIVE)
+                                # Convertimos ambos a minúsculas para comparar
+                                if slug_destino.lower() not in full_url.lower():
+                                    # print(f"     🗑️ Descartado (URL incorrecta): {full_url}")
                                     continue
                                     
                                 actividades.append({"titulo": title, "url": full_url})
+                                nuevos_encontrados += 1
                                 
                     except: continue
+                
+                # print(f"     ✅ {nuevos_encontrados} actividades válidas agregadas.", flush=True)
 
                 next_btn = await page.query_selector(self.SELECTORS["next_btn_list"])
                 if next_btn and await next_btn.is_visible():
                     await page.evaluate("(el) => el.click()", next_btn)
-                    await page.wait_for_load_state("domcontentloaded")
+                    await page.wait_for_load_state("networkidle") # Espera de red al paginar
                 else: break
-        except: pass
+        except Exception as e: 
+            print(f"     ❌ Error fatal listando actividades: {e}", flush=True)
+            pass
+            
         return actividades
 
     async def _scrape_reviews_safe(self, context, base_data):
