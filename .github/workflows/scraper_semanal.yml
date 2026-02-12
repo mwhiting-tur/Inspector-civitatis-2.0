@@ -1,14 +1,18 @@
 name: Ejecutar Scraping Semanal
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
+  # Ejecutar automáticamente los viernes a las 11:00 UTC 
+  # (Que corresponde a las 08:00 AM hora Chile Verano / 07:00 AM Chile Invierno)
+  schedule:
+    - cron: '0 11 * * 5'
 
 jobs:
   run-scraper:
     runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
-      max-parallel: 5 # Reducido un poco para evitar saturar recursos si el script es pesado
+      max-parallel: 5
       matrix:
         include:
           - country: "Chile"
@@ -44,7 +48,6 @@ jobs:
           python -m playwright install chromium --with-deps
 
       - name: Ejecutar el script por país y moneda
-        # Pasamos DOS argumentos: País y Moneda
         run: python main_semanal.py "${{ matrix.country }}" "${{ matrix.currency }}"
 
       - name: Subir CSV resultante

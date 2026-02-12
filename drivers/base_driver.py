@@ -17,7 +17,7 @@ class BaseScraper:
         try:
             # NO usamos executable_path. Playwright usará el que instalamos
             # con el comando 'playwright install chromium' en el YAML.
-            
+            """
             self.browser = await self.playwright.chromium.launch(
                 headless=headless,
                 args=["--disable-gpu", "--no-sandbox"] # Recomendado para servidores Linux
@@ -27,7 +27,7 @@ class BaseScraper:
             self.browser = await self.playwright.chromium.launch(
                 executable_path=r"C:\Program Files\Google\Chrome\Application\chrome.exe", # Ruta típica
                 headless=True 
-            )"""
+            )
             
             self.context = await self.browser.new_context(
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
