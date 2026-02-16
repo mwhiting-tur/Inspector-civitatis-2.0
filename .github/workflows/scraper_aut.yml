@@ -12,7 +12,7 @@ jobs:
       max-parallel: 15
       matrix:
         country: [
-          "Estados Unidos", "Turquía",
+          "Chile","Perú","Colombia", "Brasil","Argentina", "México", "Estados Unidos", "Turquía", "Reino Unido",
           # --- América y Caribe ---
           "Canadá", "Bahamas", "Barbados", "Belice", "Granada", "Guyana", "Jamaica", 
           "San Cristóbal y Nieves", "Santa Lucía", "San Vicente y las Granadinas", 
@@ -71,7 +71,7 @@ jobs:
 
       - name: Ejecutar el script por país
         # Le pasamos el nombre del país de la matriz como argumento
-        run: python main.py "${{ matrix.country }}"
+        run: python main_operadores.py "${{ matrix.country }}"
 
       - name: Guardar cambios (Archivo individual por país)
         if: always()

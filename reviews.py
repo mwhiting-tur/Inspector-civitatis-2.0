@@ -79,6 +79,7 @@ class CivitatisTurboScraper:
 
         async with async_playwright() as p:
             # Lanzar navegador optimizado para servidor
+            """
             browser = await p.chromium.launch(
                 headless=True, 
                 args=["--no-sandbox", "--disable-setuid-sandbox", "--disable-dev-shm-usage", "--disable-gpu"]
@@ -88,7 +89,7 @@ class CivitatisTurboScraper:
             browser = await p.chromium.launch(
                 executable_path=r"C:\Program Files\Google\Chrome\Application\chrome.exe", # Ruta típica
                 headless=True 
-            )"""
+            )
             
             context = await browser.new_context(
                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
@@ -301,7 +302,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         PAIS = sys.argv[1]
     else:
-        PAIS = "Perú"
+        PAIS = "Brasil"
 
     nombre_archivo = f"reviews_{PAIS.lower().replace(' ', '_')}_paises.csv"
     scraper = CivitatisTurboScraper(nombre_archivo)

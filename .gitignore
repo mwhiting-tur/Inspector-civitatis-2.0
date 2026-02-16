@@ -18,7 +18,7 @@ Thumbs.db
 # --- Salidas del Scraper (IMPORTANTE) ---
 # Esto evita que subas accidentalmente los CSV de 200MB a GitHub
 # y mantiene tu historial limpio.
-*.csv
+# *.csv
 *.xlsx
 *.json
 
