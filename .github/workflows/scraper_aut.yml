@@ -12,41 +12,19 @@ jobs:
       max-parallel: 15
       matrix:
         country: [
-          "Chile","Perú","Colombia", "Brasil","Argentina", "México", "Estados Unidos", "Turquía", "Reino Unido",
-          # --- América y Caribe ---
-          "Canadá", "Bahamas", "Barbados", "Belice", "Granada", "Guyana", "Jamaica", 
-          "San Cristóbal y Nieves", "Santa Lucía", "San Vicente y las Granadinas", 
-          "Surinam", "Trinidad y Tobago", "Antigua y Barbuda", "Dominica",
-          # --- Europa ---
-          "Albania", "Andorra", "Armenia", "Azerbaiyán", "Bielorrusia", 
-          "Bosnia y Herzegovina", "Bulgaria", "Chipre", "Croacia", "Dinamarca", 
-          "Eslovaquia", "Eslovenia", "Estonia", "Finlandia", "Georgia", "Hungría", 
-          "Irlanda", "Islandia", "Kazajistán", "Letonia", "Liechtenstein", 
-          "Lituania", "Luxemburgo", "Macedonia del Norte", "Malta", "Moldavia", 
-          "Mónaco", "Montenegro", "Noruega", "Polonia", "República Checa", 
-          "Rumanía", "Rusia", "San Marino", "Serbia", "Suecia", "Suiza", "Ucrania",
-          # --- África ---
-          "Angola", "Argelia", "Benín", "Botsuana", "Burkina Faso", "Burundi", 
-          "Cabo Verde", "Camerún", "Chad", "Comoras", "Costa de Marfil", "Egipto", 
-          "Eritrea", "Etiopía", "Gabón", "Gambia", "Ghana", "Guinea", "Guinea-Bisáu", 
-          "Guinea Ecuatorial", "Kenia", "Lesoto", "Liberia", "Libia", "Madagascar", 
-          "Malaui", "Malí", "Marruecos", "Mauricio", "Mauritania", "Mozambique", 
-          "Namibia", "Níger", "Nigeria", "República Centroafricana", "República del Congo", 
-          "República Democrática del Congo", "Ruanda", "Santo Tomé y Príncipe", 
-          "Senegal", "Seychelles", "Sierra Leona", "Somalia", "Suazilandia", 
-          "Sudáfrica", "Sudán", "Sudán del Sur", "Tanzania", "Togo", "Túnez", 
-          "Uganda", "Yibuti", "Zambia", "Zimbabue",
-          # --- Asia y Medio Oriente ---
-          "Afganistán", "Arabia Saudita", "Baréin", "Bangladés", "Brunéi", "Bután", 
-          "Camboya", "Catar", "Corea del Sur", "Emiratos Árabes Unidos", "Filipinas", 
-          "India", "Indonesia", "Irak", "Irán", "Israel", "Jordania", "Kirguistán", 
-          "Kuwait", "Laos", "Líbano", "Malasia", "Maldivas", "Mongolia", "Myanmar", 
-          "Nepal", "Omán", "Pakistán", "Palestina", "Singapur", "Siria", "Sri Lanka", 
-          "Tayikistán", "Timor Oriental", "Turkmenistán", "Uzbekistán", "Vietnam", "Yemen",
-          # --- Oceanía ---
-          "Fiyi", "Islas Marshall", "Islas Salomón", "Kiribati", "Micronesia", "Nauru", 
-          "Nueva Zelanda", "Palaos", "Papúa Nueva Guinea", "Samoa", "Tonga", "Tuvalu", 
-          "Vanuatu", "Polinesia Francesa"
+                # --- Resto de América y Caribe ---
+          "Bolivia", "Costa Rica", "Cuba", "Ecuador", "El Salvador", "Guatemala", 
+          "Haití", "Honduras", "Nicaragua", "Panamá", "Paraguay", "República Dominicana", 
+          "Uruguay", "Venezuela",
+          # --- Europa (Faltantes) ---
+          "Alemania", "Austria", "Bélgica", "España", "Francia", "Grecia", 
+          "Italia", "Países Bajos", "Portugal", "Vaticano",
+          # --- África (Faltantes) ---
+          "Etiopía", "Mauricio",
+          # --- Asia (Faltantes) ---
+          "China", "Corea del Norte", "Japón", "Tailandia", "Taiwán",
+          # --- Oceanía (Faltantes) ---
+          "Australia"
         ]
 
     steps:
