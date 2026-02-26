@@ -1,106 +1,130 @@
+import asyncio
 import csv
-import time
-from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeoutError
+from playwright.async_api import async_playwright, TimeoutError as PlaywrightTimeoutError
 
-def scrape_exhibitors():
-    url = "https://vitrinaturistica.anato.org/directorio-preliminar-de-expositores/"
-    csv_filename = 'expositores_anato_final.csv'
+# --- CONFIGURACIÓN PARA GITHUB ACTIONS ---
+MAX_CONCURRENTE = 5  # Pestañas simultáneas (GitHub aguanta 5 sin problema)
+CSV_FILENAME = 'expositores_anato_final.csv'
+TIMEOUT_MS = 15000   # 15 segundos (Si no carga en 15s, es mejor reintentar)
+MAX_RETRIES = 2      # Cuántas veces reintentar si da timeout
+
+async def extraer_detalle(exhibitor, context, sem, csv_lock, fieldnames):
+    """Procesa una sola página de detalle de forma concurrente con reintentos."""
+    async with sem:
+        href = exhibitor['href']
+        
+        if not href:
+            await guardar_en_csv(exhibitor, csv_lock, fieldnames)
+            return
+
+        for intento in range(MAX_RETRIES):
+            detail_page = await context.new_page()
+            try:
+                # Navegamos al detalle con un timeout más corto
+                await detail_page.goto(href, wait_until="domcontentloaded", timeout=TIMEOUT_MS)
+                
+                # --- EXTRACCIÓN DE DATOS ---
+                origen_loc = detail_page.locator('.info-content:has(span.info-label:has-text("Origen")) span.info-value')
+                if await origen_loc.count() > 0:
+                    exhibitor['Origen'] = (await origen_loc.first.inner_text()).strip()
+                    
+                web_loc = detail_page.locator('.info-content:has(span.info-label:has-text("Sitio Web")) span.info-value a')
+                if await web_loc.count() > 0:
+                    exhibitor['Sitio Web'] = (await web_loc.first.get_attribute('href')).strip()
+                    
+                desc_loc = detail_page.locator('p.exhibitor-description-detail')
+                if await desc_loc.count() > 0:
+                    exhibitor['Descripción'] = (await desc_loc.first.inner_text()).replace('\n', ' ').strip()
+                    
+                print(f"✅ [ÉXITO] Extraído: {exhibitor['Título']}")
+                break # Si tuvo éxito, rompemos el bucle de reintentos
+                    
+            except PlaywrightTimeoutError:
+                if intento < MAX_RETRIES - 1:
+                    print(f"🔄 Reintentando {exhibitor['Título']} (Intento {intento + 2}/{MAX_RETRIES})...")
+                else:
+                    print(f"⚠️ [TIMEOUT] Se agotaron los reintentos para: {exhibitor['Título']}")
+            except Exception as e:
+                print(f"❌ [ERROR] {exhibitor['Título']}: {e}")
+                break # Si es un error raro (no timeout), no reintentamos
+            finally:
+                await detail_page.close() 
+                
+        # Guardamos el resultado (ya sea exitoso o N/A por timeout)
+        await guardar_en_csv(exhibitor, csv_lock, fieldnames)
+
+async def guardar_en_csv(exhibitor, csv_lock, fieldnames):
+    """Escritura segura en el CSV para evitar que dos procesos choquen."""
+    async with csv_lock:
+        with open(CSV_FILENAME, mode='a', newline='', encoding='utf-8-sig') as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            row = {k: exhibitor.get(k, "N/A") for k in fieldnames}
+            writer.writerow(row)
+
+async def main():
+    fieldnames = ['Título', 'Categoría', 'Origen', 'Sitio Web', 'Descripción']
     
-    # 1. PREPARAMOS EL CSV AL INICIO (Escribimos solo los encabezados)
-    with open(csv_filename, mode='w', newline='', encoding='utf-8-sig') as f:
-        fieldnames = ['Título', 'Categoría', 'Origen', 'Sitio Web', 'Descripción']
+    # Preparamos el archivo
+    with open(CSV_FILENAME, mode='w', newline='', encoding='utf-8-sig') as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context()
+    csv_lock = asyncio.Lock()
+    sem = asyncio.Semaphore(MAX_CONCURRENTE)
+
+    async with async_playwright() as p:
+        # Lanzamos el navegador con un User-Agent de Windows/Chrome real para evitar bloqueos
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36"
+        )
         
-        # Bloqueamos recursos visuales para máxima velocidad
-        context.route("**/*.{png,jpg,jpeg,gif,svg,css,woff,woff2,mp4}", lambda route: route.abort())
+        # Bloqueamos recursos pesados
+        await context.route("**/*.{png,jpg,jpeg,gif,svg,css,woff,woff2,mp4}", lambda route: route.abort())
+        context.set_default_timeout(30000)
         
-        page = context.new_page()
-        page.set_default_timeout(60000)
+        main_page = await context.new_page()
         
         print("Cargando el directorio principal...")
         try:
-            page.goto(url, wait_until="domcontentloaded", timeout=90000)
-            page.wait_for_selector('.exhibitor-card', timeout=30000)
-        except PlaywrightTimeoutError:
-            print("La página principal tardó en cargar, pero intentaremos continuar...")
+            # Damos bastante tiempo a la página principal porque es la más pesada
+            await main_page.goto("https://vitrinaturistica.anato.org/directorio-preliminar-de-expositores/", wait_until="domcontentloaded", timeout=90000)
+            await main_page.wait_for_selector('.exhibitor-card', timeout=30000)
+        except Exception as e:
+            print(f"Error fatal cargando la página principal: {e}")
+            return
         
-        # OBTENEMOS TODAS LAS TARJETAS
-        cards = page.locator('.exhibitor-card').all()
+        cards = await main_page.locator('.exhibitor-card').all()
         total_cards = len(cards)
-        print(f"¡Éxito! Se encontraron {total_cards} expositores listos para extraer.")
+        print(f"\n🚀 ¡Se encontraron {total_cards} expositores! Iniciando extracción paralela (Bloques de {MAX_CONCURRENTE})...")
         
+        exhibitors_lista = []
         for i in range(total_cards):
-            card = page.locator('.exhibitor-card').nth(i)
+            card = main_page.locator('.exhibitor-card').nth(i)
             
-            # Datos básicos
-            title_loc = card.locator('.exhibitor-title')
-            cat_loc = card.locator('.exhibitor-category')
+            titulo = (await card.locator('.exhibitor-title').inner_text()).strip() if await card.locator('.exhibitor-title').count() > 0 else "Sin título"
+            categoria = (await card.locator('.exhibitor-category').inner_text()).strip() if await card.locator('.exhibitor-category').count() > 0 else "Sin categoría"
             
-            title = title_loc.inner_text().strip() if title_loc.count() > 0 else "Sin título"
-            category = cat_loc.inner_text().strip() if cat_loc.count() > 0 else "Sin categoría"
-            
-            origen, sitio_web, descripcion = "N/A", "N/A", "N/A"
-            
-            # Buscamos el enlace de detalles
             detail_link = card.locator('a.btn-details')
+            href = await detail_link.first.get_attribute('href') if await detail_link.count() > 0 else None
             
-            if detail_link.count() > 0:
-                href = detail_link.first.get_attribute('href')
-                
-                if href:
-                    detail_page = context.new_page()
-                    try:
-                        detail_page.goto(href, wait_until="domcontentloaded", timeout=45000)
-                        
-                        # --- EXTRACCIÓN CON TUS NUEVOS SELECTORES HTML ---
-                        
-                        # ORIGEN: Buscamos el div que tiene un label con "Origen" y sacamos su info-value
-                        origen_loc = detail_page.locator('.info-content:has(span.info-label:has-text("Origen")) span.info-value')
-                        if origen_loc.count() > 0:
-                            origen = origen_loc.first.inner_text().strip()
-                            
-                        # SITIO WEB: Buscamos el div que tiene un label con "Sitio Web" y sacamos el href de su etiqueta <a>
-                        web_loc = detail_page.locator('.info-content:has(span.info-label:has-text("Sitio Web")) span.info-value a')
-                        if web_loc.count() > 0:
-                            sitio_web = web_loc.first.get_attribute('href').strip()
-                            
-                        # DESCRIPCIÓN: Directo por su clase
-                        desc_loc = detail_page.locator('p.exhibitor-description-detail')
-                        if desc_loc.count() > 0:
-                            # Reemplazamos saltos de línea para que no rompa el CSV
-                            descripcion = desc_loc.first.inner_text().replace('\n', ' ').strip()
-                            
-                    except PlaywrightTimeoutError:
-                        print(f"⚠️ El servidor ignoró la petición para {title} (Timeout).")
-                    except Exception as e:
-                        print(f"⚠️ Error inesperado en {title}: {e}")
-                    finally:
-                        detail_page.close() 
-            
-            print(f"[{i+1}/{total_cards}] {title} | Origen: {origen} | Web: {sitio_web}")
-            
-            # 2. GUARDADO INCREMENTAL: Escribimos esta fila en el CSV inmediatamente
-            # Usamos mode='a' (append) para añadir al final del archivo sin borrar lo anterior
-            with open(csv_filename, mode='a', newline='', encoding='utf-8-sig') as f:
-                writer = csv.DictWriter(f, fieldnames=fieldnames)
-                writer.writerow({
-                    'Título': title,
-                    'Categoría': category,
-                    'Origen': origen,
-                    'Sitio Web': sitio_web,
-                    'Descripción': descripcion
-                })
-            
-            # 3. PROTECCIÓN ANTI-BLOQUEO: Pausa de 1 segundo obligatoria
-            time.sleep(1)
+            exhibitors_lista.append({
+                'Título': titulo,
+                'Categoría': categoria,
+                'Origen': "N/A",
+                'Sitio Web': "N/A",
+                'Descripción': "N/A",
+                'href': href
+            })
 
-        print(f"\n✅ ¡Scraping completado 100%! Revisa tu archivo '{csv_filename}'.")
-        browser.close()
+        await main_page.close()
+        
+        # Ejecutamos las tareas concurrentes
+        tareas = [asyncio.create_task(extraer_detalle(exh, context, sem, csv_lock, fieldnames)) for exh in exhibitors_lista]
+        await asyncio.gather(*tareas)
+        
+        print(f"\n🎉 ¡Scraping paralelo completado! Revisa los artefactos en GitHub.")
+        await browser.close()
 
 if __name__ == "__main__":
-    scrape_exhibitors()
+    asyncio.run(main())
