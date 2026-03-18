@@ -1,0 +1,147 @@
+name: Scrape Civitatis Multi-Destino Reviews
+
+on:
+  workflow_dispatch:
+
+jobs:
+  scrape-matrix:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 360 # 6 horas máximo por nodo
+    
+    strategy:
+      fail-fast: false
+      max-parallel: 15 # Ejecuta 15 destinos simultáneamente para no colapsar los límites gratuitos de Actions
+      matrix:
+        destino: 
+          - "Ciudad de México, México"
+          - "Buenos Aires, Argentina"
+          - "Medellín, Colombia"
+          - "Río de Janeiro, Brasil"
+          - "Cartagena de Indias, Colombia"
+          - "Playa del Carmen, México"
+          - "Akumal, México"
+          - "Puerto Morelos, México"
+          - "Lima, Perú"
+          - "Punta Cana, República Dominicana"
+          - "La Habana, Cuba"
+          - "Cusco, Perú"
+          - "Tulum, México"
+          - "Cancún, México"
+          - "Salvador de Bahía, Brasil"
+          - "Santiago de Chile, Chile"
+          - "Santo Domingo, República Dominicana"
+          - "Bogotá, Colombia"
+          - "Samaná, República Dominicana"
+          - "Juan Dolio, República Dominicana"
+          - "Boca Chica, República Dominicana"
+          - "Miches, República Dominicana"
+          - "Jamao al Norte, República Dominicana"
+          - "Baní, República Dominicana"
+          - "La Vega, República Dominicana"
+          - "Ciudad de Panamá, Panamá"
+          - "Costa Mujeres, México"
+          - "Varadero, Cuba"
+          - "Guadalajara, México"
+          - "El Calafate, Argentina"
+          - "Arequipa, Perú"
+          - "Santa Marta, Colombia"
+          - "Isla Mujeres, México"
+          - "Bariloche, Argentina"
+          - "Mendoza, Argentina"
+          - "San José, Costa Rica"
+          - "Viñales, Cuba"
+          - "Sao Paulo, Brasil"
+          - "Matanzas, Cuba"
+          - "Ushuaia, Argentina"
+          - "Montevideo, Uruguay"
+          - "Salta, Argentina"
+          - "Quito, Ecuador"
+          - "San Pedro de Atacama, Chile"
+          - "Foz de Iguazú, Brasil"
+          - "Paraty, Brasil"
+          - "Puebla, México"
+          - "Mérida, México"
+          - "Oaxaca, México"
+          - "Puerto Iguazú, Argentina"
+          - "Roma, Italia"
+          - "Barcelona, España"
+          - "París, Francia"
+          - "Milán, Italia"
+          - "Lisboa, Portugal"
+          - "Londres, Reino Unido"
+          - "Nueva York, Estados Unidos"
+          - "Berlín, Alemania"
+          - "Oporto, Portugal"
+          - "Madrid, España"
+          - "Ámsterdam, Países Bajos"
+          - "Cracovia, Polonia"
+          - "Marrakech, Marruecos"
+          - "Atenas, Grecia"
+          - "Bruselas, Bélgica"
+          - "Budapest, Hungría"
+          - "Praga, República Checa"
+          - "Viena, Austria"
+          - "Nápoles, Italia"
+          - "Florencia, Italia"
+          - "Venecia, Italia"
+          - "Tokio, Japón"
+          - "Copenhague, Dinamarca"
+          - "Brujas, Bélgica"
+          - "Varsovia, Polonia"
+          - "Burdeos, Francia"
+          - "Edimburgo, Reino Unido"
+          - "Estambul, Turquía"
+          - "Dublín, Irlanda"
+          - "Gante, Bélgica"
+          - "Disneyland París, Francia"
+          - "Kioto, Japón"
+          - "Estrasburgo, Francia"
+          - "Osaka, Japón"
+          - "Marsella, Francia"
+          - "Versalles, Francia"
+          - "Estocolmo, Suecia"
+          - "San Francisco, Estados Unidos"
+          - "Dubrovnik, Croacia"
+          - "Dubái, Emiratos Árabes Unidos"
+          - "Múnich, Alemania"
+          - "Miami, Estados Unidos"
+          - "Colmar, Francia"
+          - "Bucarest, Rumanía"
+          - "Bratislava, Eslovaquia"
+          - "Toulouse, Francia"
+          - "Aveiro, Portugal"
+          - "Amberes, Bélgica"
+          - "Bangkok, Tailandia"
+          - "Sintra, Portugal"
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Instalar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias de Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright pandas
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Instalar Navegador y Dependencias de Sistema
+        run: |
+          python -m playwright install chromium --with-deps
+
+      - name: Correr Scraper para ${{ matrix.destino }}
+        run: python -u reviews.py "${{ matrix.destino }}"
+
+      - name: Subir CSV y Progreso resultante
+        uses: actions/upload-artifact@v4
+        if: always() # Asegura que se suban los archivos incluso si da timeout o error
+        with:
+          name: resultados-${{ strategy.job-index }}
+          path: |
+            reviews_*.csv
+            progreso_*.txt
+          if-no-files-found: warn
