@@ -134,7 +134,7 @@ jobs:
           python -m playwright install chromium --with-deps
 
       - name: Correr Scraper para ${{ matrix.destino }}
-        run: python -u reviews.py "${{ matrix.destino }}"
+        run: python -u reviews_destino.py "${{ matrix.destino }}"
 
       - name: Subir CSV y Progreso resultante
         uses: actions/upload-artifact@v4
