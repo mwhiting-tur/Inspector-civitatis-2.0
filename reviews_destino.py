@@ -4,14 +4,15 @@ import json
 import os
 import csv
 import sys
+import unicodedata
 from datetime import datetime, timedelta
 from urllib.parse import urljoin
 from playwright.async_api import async_playwright
 
 # --- CONFIGURACIÓN OPTIMIZADA ---
-CONCURRENCIA_MAXIMA = 3      # Reducido un poco para mayor estabilidad en ejecuciones largas
-TIMEOUT_ACTIVIDAD = 600      # 10 Minutos máx por actividad (Aumentado)
-MAX_PAGINAS_REVIEWS = 5000   # Prácticamente sin límite para extraer todas las posibles
+CONCURRENCIA_MAXIMA = 3      # Pestañas simultáneas
+TIMEOUT_ACTIVIDAD = 600      # 10 Minutos máx por actividad
+MAX_PAGINAS_REVIEWS = 5000   # Prácticamente sin límite
 DIAS_HISTORIA = 1825         # 5 años (365 * 5)
 MAX_REINTENTOS = 3           # Intentos si una página falla
 
@@ -20,6 +21,12 @@ MESES_ES = {
     "ene": 1, "feb": 2, "mar": 3, "abr": 4, "may": 5, "jun": 6,
     "jul": 7, "ago": 8, "sep": 9, "oct": 10, "nov": 11, "dic": 12
 }
+
+def normalizar_texto(texto):
+    """Limpia acentos, mayúsculas y espacios para una comparación perfecta."""
+    if not texto: return ""
+    texto_limpio = unicodedata.normalize('NFKD', str(texto)).encode('ASCII', 'ignore').decode('utf-8')
+    return texto_limpio.lower().strip()
 
 def parsear_fecha_civitatis(texto_fecha):
     try:
@@ -37,21 +44,27 @@ def parsear_fecha_civitatis(texto_fecha):
 def cargar_destino_civitatis(input_destino):
     """Busca el destino exacto cruzando la ciudad y el país."""
     try:
-        # Separar "Ciudad de México, México" en Ciudad y País
-        partes = [p.strip() for p in input_destino.split(',')]
-        nombre_ciudad = partes[0].lower()
-        nombre_pais = partes[1].lower() if len(partes) > 1 else ""
+        input_limpio = input_destino.split(':')[0].strip()
+        partes = [p.strip() for p in input_limpio.split(',')]
+        
+        nombre_ciudad = normalizar_texto(partes[0])
+        nombre_pais = normalizar_texto(partes[1]) if len(partes) > 1 else ""
 
         with open('destinos_civitatis.json', 'r', encoding='utf-8') as f:
             todos = json.load(f)
             
         for d in todos:
-            d_name = d.get('name', '').lower()
-            d_country = d.get('nameCountry', '').lower()
-            
-            # Coincidencia flexible
+            d_name = normalizar_texto(d.get('name', ''))
+            d_country = normalizar_texto(d.get('nameCountry', ''))
+            if nombre_ciudad == d_name and (not nombre_pais or nombre_pais == d_country):
+                return d
+                
+        for d in todos:
+            d_name = normalizar_texto(d.get('name', ''))
+            d_country = normalizar_texto(d.get('nameCountry', ''))
             if nombre_ciudad in d_name and (not nombre_pais or nombre_pais in d_country):
                 return d
+                
         return None
     except Exception as e:
         print(f"❌ Error leyendo JSON: {e}", flush=True)
@@ -70,25 +83,29 @@ class CivitatisTurboScraper:
         "next_btn_reviews": ".o-pagination .next-element:not(.--deactivated)",
     }
 
+
     def __init__(self, destino_input):
-        self.destino_input = destino_input
-        self.destino_limpio = destino_input.replace(", ", "_").replace(" ", "_").lower()
-        self.output_file = f"reviews_{self.destino_limpio}.csv"
-        self.progress_file = f"progreso_{self.destino_limpio}.txt"
-        
-        self.fecha_corte = datetime.now() - timedelta(days=DIAS_HISTORIA)
-        self.semaphore = asyncio.Semaphore(CONCURRENCIA_MAXIMA)
-        self.actividades_completadas = self._cargar_progreso()
+            self.destino_input = destino_input
+            self.destino_limpio = normalizar_texto(destino_input.split(':')[0]).replace(", ", "_").replace(" ", "_")
+            
+            # --- NUEVO: CREAR CARPETA AISLADA ---
+            os.makedirs("resultados", exist_ok=True)
+            
+            # Guardamos dentro de la carpeta resultados/
+            self.output_file = f"resultados/reviews_{self.destino_limpio}.csv"
+            self.progress_file = f"resultados/progreso_{self.destino_limpio}.txt"
+            
+            self.fecha_corte = datetime.now() - timedelta(days=DIAS_HISTORIA)
+            self.semaphore = asyncio.Semaphore(CONCURRENCIA_MAXIMA)
+            self.actividades_completadas = self._cargar_progreso()
 
     def _cargar_progreso(self):
-        """Carga las URLs de las actividades que ya se terminaron de scrapear al 100%."""
         if os.path.exists(self.progress_file):
             with open(self.progress_file, 'r', encoding='utf-8') as f:
                 return set(line.strip() for line in f if line.strip())
         return set()
 
     def _guardar_progreso(self, url):
-        """Guarda la URL de la actividad terminada para no repetirla en caso de reinicio."""
         with open(self.progress_file, 'a', encoding='utf-8') as f:
             f.write(url + '\n')
         self.actividades_completadas.add(url)
@@ -108,6 +125,7 @@ class CivitatisTurboScraper:
             return
 
         nombre_pais = destino_obj.get('nameCountry', 'Desconocido')
+        print(f"✅ Destino encontrado: {destino_obj['name']} ({nombre_pais}).", flush=True)
 
         async with async_playwright() as p:
             browser = await p.chromium.launch(
@@ -137,7 +155,7 @@ class CivitatisTurboScraper:
         url_destino_base = f"https://www.civitatis.com/es/{slug_destino}/"
         actividades = []
 
-        print(f"\n🌍 {nombre_destino.upper()}: Buscando actividades...", flush=True)
+        print(f"\n🌍 Buscando actividades en la URL base...", flush=True)
         
         try:
             actividades = await self._get_activities_list(page, url_destino_base, slug_destino)
@@ -148,10 +166,9 @@ class CivitatisTurboScraper:
 
         if not actividades: return
 
-        # Filtrar actividades ya scrapeadas usando el progreso guardado
         actividades_pendientes = [act for act in actividades if act['url'] not in self.actividades_completadas]
         
-        print(f"   ↳ {len(actividades)} actividades en total.")
+        print(f"   ↳ {len(actividades)} actividades en total detectadas.")
         print(f"   ↳ {len(actividades) - len(actividades_pendientes)} ya completadas previamente.")
         print(f"   ↳ {len(actividades_pendientes)} pendientes por procesar...", flush=True)
 
@@ -203,7 +220,7 @@ class CivitatisTurboScraper:
                             if href:
                                 full_url = urljoin(url_destino_base, href)
                                 if full_url == url_destino_base: continue
-                                if slug_destino.lower() not in full_url.lower(): continue
+                                if normalizar_texto(slug_destino) not in normalizar_texto(full_url): continue
                                     
                                 actividades.append({"titulo": title, "url": full_url})
                     except: continue
@@ -216,7 +233,6 @@ class CivitatisTurboScraper:
         except Exception as e: 
             print(f"     ❌ Error listando actividades: {e}", flush=True)
             
-        # Remover duplicados manteniendo el orden
         actividades_unicas = []
         urls_vistas = set()
         for act in actividades:
@@ -227,45 +243,65 @@ class CivitatisTurboScraper:
         return actividades_unicas
 
     async def _scrape_reviews_safe(self, context, base_data):
-        """Wrapper con Semáforo, Timeout y Reintentos"""
         async with self.semaphore:
             for intento in range(1, MAX_REINTENTOS + 1):
                 try:
                     completado = await asyncio.wait_for(self._extract_reviews_logic(context, base_data), timeout=TIMEOUT_ACTIVIDAD)
                     if completado:
-                        self._guardar_progreso(base_data['url_actividad']) # Guardar punto de control
+                        self._guardar_progreso(base_data['url_actividad']) 
                         break
                 except asyncio.TimeoutError:
                     print(f"     ⏰ Timeout en {base_data['actividad']} (Intento {intento}/{MAX_REINTENTOS}).", flush=True)
                 except Exception as e:
-                    print(f"     ⚠️ Error en {base_data['actividad']}: {e} (Intento {intento}/{MAX_REINTENTOS}).", flush=True)
+                    # Ignorar los errores crudos si se interrumpe y simplemente reintentar
+                    pass 
                 
                 if intento < MAX_REINTENTOS:
-                    await asyncio.sleep(5) # Pausa antes de reintentar
+                    await asyncio.sleep(3) 
 
     async def _extract_reviews_logic(self, context, base_data):
         page = await context.new_page()
         try:
             url = base_data['url_actividad']
-            url_opiniones = f"{url}opiniones/" if not url.endswith("opiniones/") else url
-            if not url_opiniones.endswith("/") and "opiniones" not in url_opiniones:
-                 url_opiniones = f"{url}/opiniones/"
-
-            response = await page.goto(url_opiniones, wait_until="domcontentloaded", timeout=60000)
             
-            if response.status == 404:
-                return True # Retorna True para marcarla como completada y no reintentar un 404
-            
-            await page.evaluate("() => { document.querySelectorAll('.lottie-reveal-overlay, #lottie-modal, ._cookies-banner').forEach(e => e.remove()); }")
+            # Construir URL de opiniones de forma segura
+            if "opiniones" not in url:
+                url_opiniones = url if url.endswith('/') else url + '/'
+                url_opiniones += "opiniones/"
+            else:
+                url_opiniones = url
 
-            if "opiniones" not in page.url: return True
+            # Esperar a "load" garantiza que todas las redirecciones fuertes terminen
+            response = await page.goto(url_opiniones, wait_until="load", timeout=60000)
+            
+            if response and response.status == 404:
+                return True 
+            
+            # ESPERA VITAL: Da tiempo a los redirects basados en JS de Civitatis
+            await page.wait_for_timeout(2500)
+
+            # Validar si tras la espera seguimos en la sección de opiniones
+            if "opiniones" not in page.url: 
+                return True
+
+            # Limpieza protegida. Si la página se mueve aquí, no matará el bot
+            try:
+                await page.evaluate("() => { document.querySelectorAll('.lottie-reveal-overlay, #lottie-modal, ._cookies-banner').forEach(e => e.remove()); }")
+            except Exception:
+                pass 
 
             paginas = 0
             alcanzo_limite_fecha = False
 
             while paginas < MAX_PAGINAS_REVIEWS and not alcanzo_limite_fecha:
                 batch = []
-                elements = await page.query_selector_all(self.SELECTORS["review_container"])
+                
+                # Búsqueda protegida de contenedores
+                try:
+                    elements = await page.query_selector_all(self.SELECTORS["review_container"])
+                except Exception:
+                    break # Si el contexto muere leyendo, salimos limpiamente con lo que ya tenemos
+                    
                 if not elements: break
 
                 for el in elements:
@@ -277,7 +313,7 @@ class CivitatisTurboScraper:
                         if fecha_dt:
                             if fecha_dt < self.fecha_corte:
                                 alcanzo_limite_fecha = True
-                                continue # Ya nos pasamos de los 5 años
+                                continue 
                             fecha_csv = fecha_dt.strftime("%Y-%m-%d")
                         else:
                             fecha_csv = date_text
@@ -295,14 +331,18 @@ class CivitatisTurboScraper:
                 
                 if alcanzo_limite_fecha: break
 
-                next_btn = await page.query_selector(self.SELECTORS["next_btn_reviews"])
-                if next_btn and await next_btn.is_visible():
-                    await page.evaluate("(el) => el.click()", next_btn)
-                    await asyncio.sleep(1) # Espera ligera para que cargue el DOM
-                    paginas += 1
-                else: break
+                # Click de siguiente página protegido
+                try:
+                    next_btn = await page.query_selector(self.SELECTORS["next_btn_reviews"])
+                    if next_btn and await next_btn.is_visible():
+                        await page.evaluate("(el) => el.click()", next_btn)
+                        await page.wait_for_timeout(1500) # Dejar que carguen las nuevas opiniones
+                        paginas += 1
+                    else: break
+                except Exception:
+                    break 
             
-            return True # Finalizó exitosamente
+            return True 
         finally:
             await page.close()
 
@@ -318,7 +358,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         DESTINO = sys.argv[1]
     else:
-        DESTINO = "Ciudad de México, México"
+        DESTINO = "Punta Cana, República Dominicana"
 
     scraper = CivitatisTurboScraper(DESTINO)
     asyncio.run(scraper.run())

@@ -141,7 +141,6 @@ jobs:
         if: always() # Asegura que se suban los archivos incluso si da timeout o error
         with:
           name: resultados-${{ strategy.job-index }}
-          path: |
-            reviews_*.csv
-            progreso_*.txt
+          path: resultados/ # Solo sube la carpeta limpia
           if-no-files-found: warn
+
