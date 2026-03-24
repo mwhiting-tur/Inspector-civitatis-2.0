@@ -6,8 +6,8 @@ import numpy as np
 # 1. CONFIGURACIÓN DEL ENTORNO
 # ==========================================
 API_KEY = "88a5369ee04943cba850fe2422d54400"
-START_DATE = "2025-10" # Formato YYYY-MM (Ajusta a tu histórico)
-END_DATE = "2025-12"   # Formato YYYY-MM
+START_DATE = "2024-12" # Formato YYYY-MM (Ajusta a tu histórico)
+END_DATE = "2026-02"   # Formato YYYY-MM
 MOCK_MODE = False       # ¡Déjalo en True para probar el código AHORA MISMO!
 
 # Diccionario Maestro: Países -> Destinos -> Segment IDs
@@ -17,33 +17,39 @@ destinos_por_pais = {
         "Buenos Aires": "1a0921bf-f631-481d-9eac-2d9dee972dbd",
         "San Carlos de Bariloche": "9e81d410-5bc3-4608-ba9e-7ee6121b29de",
         "Mendoza": "c6cd2695-fd2d-4a28-9ee4-35ce92c9976c",
-        "El Calafate": "b31a5deb-1c68-4712-aa0e-ec16f2ed4cf7"
+        "El Calafate": "b31a5deb-1c68-4712-aa0e-ec16f2ed4cf7",
+        "Resto Argentina": "ed34d994-f684-4853-8ee2-d85a2831f1f8"
     },
     "Brasil": {
         "Río de Janeiro": "8ff88dc8-4e42-4bfc-a6d3-a6f701c898b7",
         "Foz de Iguazú": "c97f2fc9-fb64-4762-a809-c7dfe1b648e3",
         "Florianópolis": "4d29bca9-53c7-4565-bf38-60034c8a6cc0",
         "São Paulo": "a9dfb78b-702b-454a-87d9-38540ddf05bf",
-        "Salvador de Bahía": "29ff3d4c-020b-4872-b791-00b02489b5d5"
+        "Salvador de Bahía": "29ff3d4c-020b-4872-b791-00b02489b5d5",
+        "Resto Brasil": "ef3a2c84-fca7-4ad7-bab3-72852230650e"
     },
     "Chile": {
         "San Pedro de Atacama": "baf171f0-1b1f-40a8-b269-a79668213005",
         "Puerto Natales": "3c51342c-de8c-4754-90e4-a73983b1c217",
         "Santiago": "02429446-f7dc-4911-85f5-54b9ea2b8198",
-        "Rapa Nui": "1435d0d6-bf30-45ea-a91d-3e0714b50084"
+        "Rapa Nui": "1435d0d6-bf30-45ea-a91d-3e0714b50084",
+        "Resto Chile": "11af05cb-9a17-4e93-aae7-591185c41f1f"
     },
     "Colombia": {
         "Cartagena de Indias": "56ebc016-21a1-499a-9f8d-cff46c0c8ef7",
         "Medellín": "603f22d9-7071-4b3a-a4c5-9e2e59b915cd",
-        "Bogotá": "81e8123f-4dfe-4bf7-b6c8-695c35cd9c2e"
+        "Bogotá": "81e8123f-4dfe-4bf7-b6c8-695c35cd9c2e",
+        "Resto Colombia": "bb72bfa6-7978-4fb3-8aac-00a6f886b48d"
     },
     "México": {
         "Cancún / Riviera Maya": "857956eb-ea1c-434b-82b6-73cf71b26324",
-        "Ciudad de México": "50f30ece-8fee-48e2-ba44-f3ea16b69954"
+        "Ciudad de México": "50f30ece-8fee-48e2-ba44-f3ea16b69954",
+        "Resto México": "b4509bf2-bfb5-4337-9a3f-a5f8a1afa874"
     },
     "Perú": {
         "Cusco": "ce57ffe0-14bf-48fe-805c-ba44014ed782",
-        "Lima": "4166d9a9-3e84-4bec-b3ad-bd2b1c3e4fea"
+        "Lima": "4166d9a9-3e84-4bec-b3ad-bd2b1c3e4fea",
+        "Resto Peru": "0a8965d5-e861-4094-8820-a643d73375a8"
     }
 }
 
@@ -140,10 +146,14 @@ if __name__ == "__main__":
         print("\n")
 
     # =====================================================================
-    # OPCIONAL: Generar Excel (Descomenta las 4 líneas de abajo para usar)
+    # Exportar a CSV en la misma carpeta
     # =====================================================================
-    with pd.ExcelWriter("Metas_Supply_Mensuales.xlsx") as writer:
-        for pais, df in resultados.items():
-    #         # Exportar valores numéricos puros (0.0 a 1.0) para multiplicar en Excel
-            df.to_excel(writer, sheet_name=pais[:31], index_label="Ciudad / Destino")
-    print("✅ Exportado exitosamente a 'Metas_Supply_Mensuales.xlsx'")
+    dfs_para_csv = []
+    for pais, df in resultados.items():
+        df_pais = df.copy()
+        df_pais.insert(0, 'País', pais)
+        dfs_para_csv.append(df_pais)
+        
+    df_consolidado = pd.concat(dfs_para_csv)
+    df_consolidado.to_csv("Metas_Supply_Mensuales.csv", index_label="Ciudad / Destino", encoding="utf-8-sig")
+    print("✅ Exportado exitosamente a 'Metas_Supply_Mensuales.csv'")

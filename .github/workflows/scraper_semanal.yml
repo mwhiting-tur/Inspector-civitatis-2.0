@@ -27,6 +27,16 @@ jobs:
             currency: "ARS"
           - country: "Brasil"
             currency: "BRL"
+          - country: "Bolivia"
+            currency: "USD"
+          - country: "Paraguay"
+            currency: "USD"
+          - country: "Uruguay"
+            currency: "USD"   
+          - country: "Ecuador"
+            currency: "USD"   
+          - country: "Panamá"
+            currency: "USD"
 
     steps:
       - name: Descargar código del repo
