@@ -1,0 +1,46 @@
+name: Civitatis Sitemap Checker
+
+on:
+  schedule:
+    # 12:00 UTC corresponds to 08:00 AM in Chile Standard Time (UTC-4).
+    # Note: GitHub Actions runs on UTC. During Chile's Daylight Saving Time (UTC-3), this will trigger at 09:00 AM.
+    - cron: '0 12 * * 5'
+  
+  # Allows you to trigger the workflow manually from the GitHub Actions tab
+  workflow_dispatch: 
+
+jobs:
+  compare-sitemaps:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Run sitemap comparison script
+        run: python sitemap_civitatis.py
+
+      - name: Upload changes report as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-cambios-civitatis
+          path: civitatis_cambios.txt
+          
+      - name: Commit updated baseline to repository
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add civitatis_baseline.txt
+          # Commits the new baseline so next week's run compares against today's data
+          git commit -m "chore: Update baseline data [skip ci]" || echo "No changes to commit"
+          git push

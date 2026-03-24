@@ -6,6 +6,7 @@ import time
 # Configuración
 SITEMAP_URL = "https://www.civitatis.com/sitemap.xml"
 DATA_FILE = "civitatis_baseline.txt"
+CHANGES_FILE = "civitatis_cambios.txt"
 
 # Headers para engañar al firewall (User-Agent de un Chrome real)
 HEADERS = {
@@ -47,7 +48,8 @@ def get_urls_from_xml(url):
         entries = root.findall('ns:url', namespace)
         for url_entry in entries:
             loc = url_entry.find('ns:loc', namespace).text
-            urls.add(loc)
+            if "/es/" in loc:
+                urls.add(loc)
             
     except Exception as e:
         print(f"Error procesando {url}: {e}")
@@ -59,7 +61,7 @@ def run_comparison():
     old_urls = set()
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE, "r", encoding="utf-8") as f:
-            old_urls = set(line.strip() for line in f)
+            old_urls = set(line.strip() for line in f if "/es/" in line)
         print(f"Cargadas {len(old_urls)} URLs previas.")
 
     # Obtener actuales
@@ -90,6 +92,24 @@ def run_comparison():
     if bajas:
         print("\n[-] Muestra de actividades eliminadas:")
         for url in list(bajas)[:5]: print(f" - {url}")
+
+    # Guardar reporte de cambios en archivo
+    with open(CHANGES_FILE, "w", encoding="utf-8") as f:
+        f.write("=== REPORTE DE CAMBIOS ===\n")
+        f.write(f"Total Nuevas: {len(nuevas)}\n")
+        f.write(f"Total Eliminadas (Bajas): {len(bajas)}\n\n")
+        
+        if nuevas:
+            f.write("--- NUEVAS ACTIVIDADES ---\n")
+            for url in sorted(nuevas):
+                f.write(f"{url}\n")
+            f.write("\n")
+            
+        if bajas:
+            f.write("--- ACTIVIDADES ELIMINADAS ---\n")
+            for url in sorted(bajas):
+                f.write(f"{url}\n")
+    print(f"\nReporte completo de cambios guardado en '{CHANGES_FILE}'")
 
     # Guardar nuevo baseline
     with open(DATA_FILE, "w", encoding="utf-8") as f:
