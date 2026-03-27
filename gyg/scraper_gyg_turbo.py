@@ -9,8 +9,8 @@ import threading
 from datetime import datetime, timedelta
 
 # --- CONFIGURACIÓN ---
-archivo_entrada = 'gyg/tours_bolivia_IDs.csv'
-archivo_salida = 'gyg/reviews_bolivia_FINAL.csv'
+archivo_entrada = 'gyg/tours_republica_dominicana_IDs.csv'
+archivo_salida = 'gyg/reviews_republica_dominicana_FINAL.csv'
 
 url_api_post = "https://travelers-api.getyourguide.com/user-interface/activity-details-page/blocks?ranking_uuid=8db3d7f9-ae97-4e8e-9782-086c43dd5f1b"
 hace_5_anos = datetime.now() - timedelta(days=5*365)
@@ -145,7 +145,7 @@ def procesar_tour(row):
                 autor_texto = autor_texto.replace(' – ', ' - ').replace(' — ', ' - ')
                 pais_usuario = autor_texto.split(' - ')[-1].strip() if ' - ' in autor_texto else "Desconocido"
                 
-                linea_csv = f"Bolivia;{destino};{actividad};{url_act};{fecha_obj.strftime('%d/%m/%Y')};{pais_usuario}\n"
+                linea_csv = f"República Dominicana;{destino};{actividad};{url_act};{fecha_obj.strftime('%d/%m/%Y')};{pais_usuario}\n"
                 
                 # 🔒 USAMOS EL CERROJO PARA GUARDAR EN EL CSV DE FORMA SEGURA
                 with lock_csv:

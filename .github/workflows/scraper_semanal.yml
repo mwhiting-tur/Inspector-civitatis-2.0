@@ -15,7 +15,30 @@ jobs:
       max-parallel: 5
       matrix:
         include:
-
+          - country: "Chile"
+            currency: "CLP"
+          - country: "México"
+            currency: "MXN"
+          - country: "Perú"
+            currency: "PEN"
+          - country: "Colombia"
+            currency: "COP"
+          - country: "Argentina"
+            currency: "ARS"
+          - country: "Brasil"
+            currency: "BRL"
+          - country: "Bolivia"
+            currency: "USD"
+          - country: "Paraguay"
+            currency: "USD"
+          - country: "Uruguay"
+            currency: "USD"   
+          - country: "Ecuador"
+            currency: "USD"   
+          - country: "Panamá"
+            currency: "USD"
+          - country: "Costa Rica"
+            currency: "USD"
           - country: "República Dominicana"
             currency: "USD"
 
