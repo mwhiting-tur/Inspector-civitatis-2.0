@@ -16,7 +16,7 @@ jobs:
       matrix:
         include:
 
-          - country: "Costa Rica"
+          - country: "República Dominicana"
             currency: "USD"
 
     steps:

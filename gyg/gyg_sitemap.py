@@ -4,13 +4,13 @@ import os
 
 # 1. Los archivos TXT que descargaste manualmente
 archivos_sitemap = [
-    "gyg\sitemap-activity-0.txt",
-    "gyg\sitemap-activity-1.txt",
-    "gyg\sitemap-activity-2.txt",
-    "gyg\sitemap-activity-3.txt",
-    "gyg\sitemap-activity-4.txt",
-    "gyg\sitemap-activity-5.txt",
-    "gyg\sitemap-activity-6.txt"
+    "gyg/sitemap-activity-0.txt",
+    "gyg/sitemap-activity-1.txt",
+    "gyg/sitemap-activity-2.txt",
+    "gyg/sitemap-activity-3.txt",
+    "gyg/sitemap-activity-4.txt",
+    "gyg/sitemap-activity-5.txt",
+    "gyg/sitemap-activity-6.txt"
 ]
 
 # 2. Las ciudades de Brasil (añade todas las que obtuviste en tu HTML anterior)
@@ -384,6 +384,123 @@ ciudades_peru = [
     "puerto-maldonado-l2146"
 ]
 
+ciudades_costa_rica = [
+    "grecia-l146334", "sarchi-l146333", "cartago-l135017", 
+    "samara-l179139", "san-gerardo-de-dota-l211776", "orosi-costa-rica-l181563", 
+    "nosara-l184507", "brasilito-l169708", "penas-blancas-l188844", 
+    "curubande-de-liberia-l191170", "cuajiniquil-l206882", "liberia-costa-rica-l381", 
+    "tamarindo-l995", "nuevo-arenal-l179120", "culebra-costa-rica-l180387", 
+    "playa-flamingo-l1548", "playa-hermosa-l32230", "las-catalinas-l179131", 
+    "sardinal-de-carrillo-l184580", "bagaces-l160048", "el-jobo-costa-rica-l213082", 
+    "la-cruz-l206883", "tilaran-costa-rica-l215003", "salto-costa-rica-l219963", 
+    "canas-dulces-l233902", "coco-costa-rica-l266578", "nacascolo-l191125", 
+    "santa-cruz-costa-rica-l184589", "playas-del-coco-l192944", "playa-azul-guanacaste-l235818", 
+    "potrero-costa-rica-l179135", "pinilla-l158702", "san-juanillo-l233854", 
+    "hacienda-orosi-l181554", "santa-ana-costa-rica-l222904", "san-jose-costa-rica-l379", 
+    "escazu-san-jose-l181976", "playa-herradura-l168725", "moctezuma-costa-rica-l189028", 
+    "tajo-alto-l116312", "ojochal-l226450", "drake-costa-rica-l237222", 
+    "pavones-costa-rica-l243286", "caldera-l191312", "puerto-jimenez-l32268", 
+    "tarcoles-l186144", "esterillos-este-l208947", "manuel-antonio-l142888", 
+    "miramar-l191555", "palmar-norte-l222998", "dominicalito-l225874", 
+    "terraba-l240025", "santa-teresa-costa-rica-l2458", "quepos-l32284", 
+    "paquera-l193403", "bahia-ballena-l194318", "pueblo-nuevo-costa-rica-l219206", 
+    "coronado-costa-rica-l227503", "agujitas-de-drake-l230887", "londres-costa-rica-l237861", 
+    "paso-canoas-l221692", "uvita-costa-rica-l187790", "sierpe-l238757", 
+    "malpais-costa-rica-l189020", "dominical-l216058", "monteverde-l2135", 
+    "puntarenas-l32285", "quebrada-ganado-l220439", "parrita-l206051", 
+    "jaco-l667", "santa-elena-costa-rica-l180411", "ciudad-cortes-l227610", 
+    "portalon-l227787", "la-virgen-l220623", "limon-l380", 
+    "punta-uva-l220419", "siquirres-l239618", "rio-banano-l215702", 
+    "tortuguero-l179461", "manzanillo-l236504", "roxana-costa-rica-l215393", 
+    "moin-costa-rica-l237966", "guapiles-l180439", "bribri-l234306", 
+    "golfito-l205806", "belen-costa-rica-l249058", "sarapiqui-l146313", 
+    "heredia-l2757", "alajuela-l145894", "zarcero-l209723", 
+    "san-jose-de-alajuela-l215889", "el-castillo-l178446", "san-rafael-de-guatuso-l239451", 
+    "el-gavilan-l240343", "boca-tapada-l243842", "orotina-l227540", 
+    "san-pedro-de-poas-l242961", "bijagua-de-upala-l215361", "los-chiles-costa-rica-l240408", 
+    "katira-costa-rica-l184505", "esquipulas-l210407", "chachagua-l257212", 
+    "tambor-costa-rica-l188979", "upala-l205966", "poas-l256963", 
+    "palma-costa-rica-l181668", "la-fortuna-l1904", "quesada-l209724", 
+    "cahuita-l149254", "puerto-viejo-de-talamanca-l158223", "turrialba-cartago-l220579"
+]
+
+ciudades_panama = [
+    "pedasi-l234818", "santa-catalina-panama-l32448", "rio-hato-l193105", 
+    "cocle-l1479", "balboa-panama-l207518", "ciudad-de-panama-l811", 
+    "la-chorrera-l152509", "punta-chame-l138328", "anton-l168356", 
+    "gamboa-l146516", "david-panama-l155909", "boquete-l206044", 
+    "cerro-punta-panama-l266177", "jaramillo-l240638", "caldera-panama-l212617", 
+    "portobelo-l143593", "colon-l32237", "changuinola-district-l154301"
+]
+
+ciudades_ecuador = [
+    "ingapirca-ecuador-l184142", "manta-l32236", "gualaceo-ecuador-l184143", 
+    "san-bartolome-ecuador-l243028", "santa-isabel-ecuador-l220201", "chordeleg-l2261", 
+    "sigsig-l218659", "cuenca-ecuador-l368", "santo-domingo-ecuador-l208931", 
+    "tigua-l148364", "pujili-l148366", "canton-de-latacunga-l148367", 
+    "cotundo-l192829", "papallacta-l144651", "archidona-l209603", 
+    "puerto-misahualli-l190548", "tena-ecuador-l2688", "alausi-l2229", 
+    "riobamba-l2234", "san-cristobal-islas-galapagos-l371", "puerto-baquerizo-moreno-l180769", 
+    "limoncocha-l210870", "shushufindi-l210999", "bucay-ecuador-l181548", 
+    "san-miguel-del-morro-l254691", "milagro-ecuador-l239418", "guayaquil-l532", 
+    "guaranda-l216477", "puerto-villamil-l180376", "seymour-l217667", 
+    "ambato-l151230", "banos-l2262", "rio-negro-l239676", 
+    "niton-l230952", "quito-l504", "tumbaco-l190549", 
+    "calacali-l233493", "guayllabamba-l2256", "pintag-l218350", 
+    "cayambe-l2257", "pululahua-l180556", "puerto-francisco-de-orellana-l199982", 
+    "otavalo-l2259", "cotacachi-l168378", "ibarra-l215282", 
+    "puerto-ayora-l148437", "santa-cruz-ecuador-l214972", "puyo-ecuador-l243434", 
+    "nueva-loja-l5279"
+]
+
+ciudades_paraguay = [
+    "ciudad-del-este-l150275", "asuncion-l32308", "luque-l205935", 
+    "aregua-l253188", "encarnacion-l154782", "san-bernardino-paraguay-l251306", 
+    "caacupe-l218950", "pirayu-l225559", "paraguari-l221960"
+]
+
+ciudades_uruguay = [
+    "ciudad-de-la-costa-l215277", "montevideo-l539", "los-cerros-de-san-juan-l207880", 
+    "nueva-helvecia-l174842", "colonia-del-sacramento-l1111", "carmelo-l1112", 
+    "jose-ignacio-l165099", "villa-serrana-l215855", "piriapolis-l113597", 
+    "la-barra-l121090", "punta-del-este-l739", "canelones-l121095", 
+    "cabo-polonio-l245960"
+]
+
+ciudades_bolivia = [
+    "uyuni-l32222", "colchani-l148320", "copacabana-bolivia-l139396", 
+    "coroico-l148319", "yolosa-l148247", "torotoro-l148316", 
+    "chualluma-l219261", "huatajata-l148138", "la-paz-l4674", 
+    "el-alto-l132788", "potolo-l235473", "maragua-bolivia-l190932", 
+    "chataquila-l210256", "pulacayo-l230404", "tahua-l230071", 
+    "potosi-l32503", "sucre-l2927", "rurrenabaque-l148305", 
+    "ciudad-de-tiwanaku-l259739", "sol-de-la-manana-l210809", "san-cristobal-bolivia-l185639", 
+    "chiguana-bolivia-l185468", "sajama-l240279", "santa-cruz-de-la-sierra-l192120", 
+    "samaipata-l218965", "yumani-bolivia-l181551", "huayllajara-bolivia-l182856", 
+    "cochabamba-l148317"
+]
+
+ciudades_republica_dominicana = [
+    "bani-l107607", "higuero-l210519", "boca-chica-l158753", 
+    "santo-domingo-este-l216482", "jamao-al-norte-l259059", "moca-l35179", 
+    "villa-trina-l231990", "santo-domingo-l471", "juan-dolio-l158830", 
+    "barahona-l158642", "jarabacoa-l107622", "la-vega-republica-dominicana-l158754", 
+    "constanza-l158757", "manabao-l247090", "cofresi-l189497", 
+    "sosua-l129503", "puerto-plata-l475", "cabarete-l2296", 
+    "villa-montellano-l191161", "villa-isabela-l217538", "punta-rusia-l243485", 
+    "bonao-l158743", "miches-l139386", "el-cedro-de-miches-l210044", 
+    "santiago-de-los-caballeros-l2193", "tamboril-l158759", "hato-mayor-del-rey-l241361", 
+    "sabana-de-la-mar-l146464", "las-canitas-l185328", "puerto-deportivo-de-cap-cana-l239863", 
+    "uvero-alto-l129533", "boca-de-yuma-l185392", "punta-cana-l411", 
+    "bayahibe-l107537", "los-melones-l180079", "macao-republica-dominicana-l183015", 
+    "san-rafael-del-yuma-l216956", "higuey-l110172", "veron-l184614", 
+    "romana-l1198", "benerito-l166010", "santa-cruz-de-mao-l206925", 
+    "cabrera-republica-dominicana-l189545", "nagua-l189539", "arroyo-salado-l239533", 
+    "monte-plata-l158745", "bayaguana-l226198", "neyba-l107582", 
+    "samana-l145033", "sanchez-l183417", "la-aguada-l185099", 
+    "las-terrenas-l32306", "las-galeras-l129528", "el-limon-l177935"
+]
+
 actividades_encontradas = []
 
 print("Iniciando búsqueda de tours en Brasil...")
@@ -398,7 +515,7 @@ for archivo in archivos_sitemap:
                 url = url.strip() # Quitar espacios o saltos de línea
                 
                 # Revisar si alguna ciudad de Brasil está en esta URL
-                for ciudad_slug in ciudades_peru:
+                for ciudad_slug in ciudades_republica_dominicana:
                     if f"/{ciudad_slug}/" in url:
                         # Extraer el ID (todo lo que está entre '-t' y '/')
                         match_id = re.search(r'-t(\d+)/', url)
@@ -411,7 +528,7 @@ for archivo in archivos_sitemap:
                             titulo_bruto = "Desconocido"
                         
                         actividades_encontradas.append({
-                            "pais": "Perú",
+                            "pais": "República Dominicana",
                             "ciudad_id": ciudad_slug,
                             "tour_id": tour_id,
                             "titulo_referencia": titulo_bruto,
@@ -426,7 +543,7 @@ if actividades_encontradas:
     # Eliminar posibles duplicados
     df = df.drop_duplicates(subset=['tour_id'])
     
-    archivo_salida = 'gyg/tours_peru_IDs.csv'
+    archivo_salida = 'gyg/tours_republica_dominicana_IDs.csv'
     df.to_csv(archivo_salida, index=False, sep=';', encoding='utf-8-sig')
     
     print(f"\n✅ ¡ÉXITO ROTUNDO! Se encontraron {len(df)} tours y se guardaron en '{archivo_salida}'")
