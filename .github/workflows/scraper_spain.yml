@@ -1,4 +1,4 @@
-name: Ejecutar Scraping Semanal
+name: Ejecutar Scraping Semanal Spain
 
 on:
   workflow_dispatch:
