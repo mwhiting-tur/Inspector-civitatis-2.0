@@ -1,0 +1,49 @@
+name: Ejecutar Scraping Semanal
+
+on:
+  workflow_dispatch:
+  # Ejecutar automáticamente los viernes a las 11:00 UTC 
+  # (Que corresponde a las 08:00 AM hora Chile Verano / 07:00 AM Chile Invierno)
+  schedule:
+    - cron: '0 11 * * 5'
+
+jobs:
+  run-scraper:
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      max-parallel: 5
+      matrix:
+        include:
+          - country: "España"
+            currency: "EUR"
+
+
+    steps:
+      - name: Descargar código del repo
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar dependencias de Python
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright pandas
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      - name: Instalar Navegador y Dependencias de Sistema
+        run: |
+          python -m playwright install chromium --with-deps
+
+      - name: Ejecutar el script por país y moneda
+        run: python main_semanal_spain.py "${{ matrix.country }}" "${{ matrix.currency }}"
+
+      - name: Subir CSV resultante
+        uses: actions/upload-artifact@v4
+        with:
+          name: precios-${{ matrix.country }}
+          path: data/precios_*.csv
+          if-no-files-found: warn

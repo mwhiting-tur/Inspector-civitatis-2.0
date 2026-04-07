@@ -102,3 +102,52 @@ jobs:
           name: precios-${{ matrix.country }}
           path: data/precios_*.csv
           if-no-files-found: warn
+
+  merge-results:
+    needs: run-scraper
+    # Ejecutamos el job incluso si algún país falla en la matrix (para salvar los que sí funcionaron)
+    if: always()
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Descargar todos los artefactos
+        uses: actions/download-artifact@v4
+        with:
+          pattern: precios-*
+          path: all_data
+          merge-multiple: true
+
+      - name: Configurar Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Instalar Pandas
+        run: pip install pandas
+
+      - name: Combinar CSVs
+        run: |
+          python -c "
+          import pandas as pd
+          import glob
+
+          files = glob.glob('all_data/*.csv')
+          df_list = []
+          for f in files:
+              try:
+                  df_list.append(pd.read_csv(f))
+              except Exception as e:
+                  print(f'Error leyendo {f}: {e}')
+          
+          if df_list:
+              df_combined = pd.concat(df_list, ignore_index=True)
+              df_combined.to_csv('precios_completos.csv', index=False, encoding='utf-8-sig')
+              print('✅ Archivos combinados con éxito.')
+          "
+
+      - name: Subir artefacto combinado
+        uses: actions/upload-artifact@v4
+        with:
+          name: precios-completos
+          path: precios_completos.csv
+          if-no-files-found: warn
