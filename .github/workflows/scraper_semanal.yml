@@ -43,8 +43,6 @@ jobs:
             currency: "USD"
           - country: "Estados Unidos"
             currency: "USD"
-          - country: "España"
-            currency: "EUR"
           - country: "Italia"
             currency: "EUR"
           - country: "Francia"
