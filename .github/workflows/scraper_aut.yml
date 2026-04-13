@@ -12,19 +12,8 @@ jobs:
       max-parallel: 15
       matrix:
         country: [
-                # --- Resto de América y Caribe ---
-          "Bolivia", "Costa Rica", "Cuba", "Ecuador", "El Salvador", "Guatemala", 
-          "Haití", "Honduras", "Nicaragua", "Panamá", "Paraguay", "República Dominicana", 
-          "Uruguay", "Venezuela",
-          # --- Europa (Faltantes) ---
-          "Alemania", "Austria", "Bélgica", "España", "Francia", "Grecia", 
-          "Italia", "Países Bajos", "Portugal", "Vaticano",
-          # --- África (Faltantes) ---
-          "Etiopía", "Mauricio",
-          # --- Asia (Faltantes) ---
-          "China", "Corea del Norte", "Japón", "Tailandia", "Taiwán",
-          # --- Oceanía (Faltantes) ---
-          "Australia"
+          "Chile", "México", "Perú", "Colombia", "Argentina", "Brasil",
+
         ]
 
     steps:
@@ -49,7 +38,7 @@ jobs:
 
       - name: Ejecutar el script por país
         # Le pasamos el nombre del país de la matriz como argumento
-        run: python main_operadores.py "${{ matrix.country }}"
+        run: python main_cutoff.py "${{ matrix.country }}"
 
       - name: Guardar cambios (Archivo individual por país)
         if: always()
