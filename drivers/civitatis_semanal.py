@@ -22,6 +22,7 @@ class CivitatisScraperSemanal(BaseScraper):
         "rating_val": ".m-rating--text", 
         
         "viajeros": "span._full",
+        "cancelation_span": ".comfort-card__cancelation span",
         "next_btn": "a.next-element",
         "view_all_btn": "a.button-list-footer",
         "cookie_btn": "#btn-accept-cookies, ._accept, .accept-button"
@@ -71,6 +72,28 @@ class CivitatisScraperSemanal(BaseScraper):
             return float(text)
         except ValueError:
             return 0.0
+
+    def _parse_cancelation(self, content_text, activity_name):
+        """
+        Parses the cancellation policy content attribute and returns hours as int, or None.
+        - Activities starting with 'Traslados' always return None.
+        - Extracts hours directly, or converts days to hours.
+        - Returns None if no cancellation info found.
+        """
+        if not activity_name or activity_name.strip().startswith("Traslados"):
+            return None
+        if not content_text:
+            return None
+
+        # Match "X horas" or "X días/dias"
+        match_horas = re.search(r'(\d+)\s+hora', content_text, re.IGNORECASE)
+        match_dias = re.search(r'(\d+)\s+d[íi]a', content_text, re.IGNORECASE)
+
+        if match_horas:
+            return int(match_horas.group(1))
+        if match_dias:
+            return int(match_dias.group(1)) * 24
+        return None
 
     async def extract_list(self, lista_destinos, output_file, currency_code="CLP"):
         await self.init_browser(headless=True) 
@@ -147,6 +170,10 @@ class CivitatisScraperSemanal(BaseScraper):
                                     viajeros_txt = await self.get_safe_text(item, self.SELECTORS["viajeros"])
                                     rating_txt = await self.get_safe_text(item, self.SELECTORS["rating_val"])
 
+                                    cancelation_el = await item.query_selector(self.SELECTORS["cancelation_span"])
+                                    cancelation_content = await cancelation_el.get_attribute("content") if cancelation_el else None
+                                    cancelacion = self._parse_cancelation(cancelation_content, actividad)
+
                                     pagina_data.append({
                                         "moneda": currency_code,
                                         "pais": destino['nameCountry'],
@@ -159,7 +186,8 @@ class CivitatisScraperSemanal(BaseScraper):
                                         "precio_real": self._clean_data(precio_real_txt, 'float'),
                                         "opiniones": self._clean_data(opiniones_txt, 'int'),
                                         "viajeros": self._clean_data(viajeros_txt, 'int'),
-                                        "rating": self._clean_rating(rating_txt)
+                                        "rating": self._clean_rating(rating_txt),
+                                        "cancelacion": cancelacion
                                     })
                                     self.seen_items.add(identifier)
                             except: continue
@@ -200,7 +228,8 @@ class CivitatisScraperSemanal(BaseScraper):
             'precio_real', 
             'opiniones', 
             'viajeros',
-            'rating' # Columna final solicitada
+            'rating',
+            'cancelacion'
         ]
         
         # Reordenamos y rellenamos con 0 o vacío si falta alguna (seguridad)
