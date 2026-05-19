@@ -62,7 +62,7 @@ def run_matching(csv_input, sitemap_input, csv_output):
 if __name__ == "__main__":
     # Configura aquí tus nombres de archivo
     run_matching(
-        csv_input='tur/productos_tur.csv', 
-        sitemap_input='tur/sitemap_tur.xml', 
-        csv_output='tur/productos_con_url_es.csv'
+        csv_input='tur/productos_tur_15-05.csv', 
+        sitemap_input='tur/sitemap_tur_15-05.xml', 
+        csv_output='tur/productos_con_url_es_15-05.csv'
     )

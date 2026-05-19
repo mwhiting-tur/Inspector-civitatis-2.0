@@ -7,7 +7,7 @@ import numpy as np
 # ==========================================
 API_KEY = "88a5369ee04943cba850fe2422d54400"
 START_DATE = "2024-12" # Formato YYYY-MM (Ajusta a tu histórico)
-END_DATE = "2026-02"   # Formato YYYY-MM
+END_DATE = "2026-04"   # Formato YYYY-MM
 MOCK_MODE = False       # ¡Déjalo en True para probar el código AHORA MISMO!
 
 # Diccionario Maestro: Países -> Destinos -> Segment IDs
@@ -18,6 +18,7 @@ destinos_por_pais = {
         "San Carlos de Bariloche": "e379c8c7-87dc-46db-ac6d-9b44dc578433",
         "Mendoza": "bdcf3560-b760-4ad2-8a23-be82e1a57145",
         "El Calafate": "6fd97fb4-7384-42f0-a73d-3108315e4f22",
+        "Puerto Iguazú": "253d05f5-910e-48ae-9dfe-5fe50fa287f9",
         "Resto Argentina": "ea6f193a-87ae-4aa3-8968-3202eb1532af"
     },
     "Brasil": {
