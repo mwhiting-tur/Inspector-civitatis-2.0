@@ -340,8 +340,6 @@ https://www.civitatis.com/es/alcala-real/visitas-guiadas/
 https://www.civitatis.com/es/alcamo/
 https://www.civitatis.com/es/alcamo/excursion-reserva-natural-zingaro/
 https://www.civitatis.com/es/alcamo/visita-bodega-quattrocieli/
-https://www.civitatis.com/es/alcanar/
-https://www.civitatis.com/es/alcanar/visita-guiada-moleta-remei/
 https://www.civitatis.com/es/alcaniz/
 https://www.civitatis.com/es/alcaniz/tour-privado-alcaniz/
 https://www.civitatis.com/es/alcaniz/visita-guiada-alcaniz/
@@ -570,6 +568,7 @@ https://www.civitatis.com/es/amritsar/visitas-guiadas/
 https://www.civitatis.com/es/amsterdam/
 https://www.civitatis.com/es/amsterdam/actividades-gastronomicas/
 https://www.civitatis.com/es/amsterdam/amsterdam-city-card/
+https://www.civitatis.com/es/amsterdam/amsterdam-nightlife-ticket/
 https://www.civitatis.com/es/amsterdam/autobus-turistico-amsterdam/
 https://www.civitatis.com/es/amsterdam/barrio-judio/
 https://www.civitatis.com/es/amsterdam/barrio-rojo/
@@ -578,6 +577,7 @@ https://www.civitatis.com/es/amsterdam/entrada-amsterdam-dungeon/
 https://www.civitatis.com/es/amsterdam/entrada-art-zoo-museum/
 https://www.civitatis.com/es/amsterdam/entrada-body-worlds/
 https://www.civitatis.com/es/amsterdam/entrada-heineken-experience/
+https://www.civitatis.com/es/amsterdam/entrada-icebar-xtracold/
 https://www.civitatis.com/es/amsterdam/entrada-madame-tussauds/
 https://www.civitatis.com/es/amsterdam/entrada-museo-casa-flotante/
 https://www.civitatis.com/es/amsterdam/entrada-museo-ciencia-nemo/
@@ -591,14 +591,18 @@ https://www.civitatis.com/es/amsterdam/entradas-adam-lookout/
 https://www.civitatis.com/es/amsterdam/entradas-museo-nacional-holocausto/
 https://www.civitatis.com/es/amsterdam/entradas-palacio-real-amsterdam/
 https://www.civitatis.com/es/amsterdam/entradas/
+https://www.civitatis.com/es/amsterdam/excursion-brujas/
+https://www.civitatis.com/es/amsterdam/excursion-molinos-zaanse-schans/
+https://www.civitatis.com/es/amsterdam/excursion-zaanse-schans-volendam-marken/
 https://www.civitatis.com/es/amsterdam/excursiones/
 https://www.civitatis.com/es/amsterdam/free-tours/
-https://www.civitatis.com/es/amsterdam/heineken-experience-paseo-barco/
+https://www.civitatis.com/es/amsterdam/hard-rock-cafe-amsterdam/
 https://www.civitatis.com/es/amsterdam/museo-van-gogh/
 https://www.civitatis.com/es/amsterdam/paseos-barco/
 https://www.civitatis.com/es/amsterdam/pub-crawl-amsterdam/
 https://www.civitatis.com/es/amsterdam/rijksmuseum/
 https://www.civitatis.com/es/amsterdam/sesion-fotografica-privada-amsterdam/
+https://www.civitatis.com/es/amsterdam/tour-ana-frank/
 https://www.civitatis.com/es/amsterdam/tours-bicicleta/
 https://www.civitatis.com/es/amsterdam/traslados/
 https://www.civitatis.com/es/amsterdam/visitas-guiadas/
@@ -1055,6 +1059,7 @@ https://www.civitatis.com/es/atlanta/free-tour-luther-king-derechos/
 https://www.civitatis.com/es/atlanta/free-tour-parque-olimpico-centenario/
 https://www.civitatis.com/es/atlanta/tour-gastronomico-atlanta/
 https://www.civitatis.com/es/atlanta/tour-vinedos-norte-georgia/
+https://www.civitatis.com/es/atlanta/traslados/
 https://www.civitatis.com/es/atlanta/visitas-guiadas/
 https://www.civitatis.com/es/atlantico/
 https://www.civitatis.com/es/auckland/
@@ -1248,18 +1253,11 @@ https://www.civitatis.com/es/baku/visitas-guiadas/
 https://www.civitatis.com/es/balchik/
 https://www.civitatis.com/es/balchik/excursion-velero-mar-negro/
 https://www.civitatis.com/es/baleares/
-https://www.civitatis.com/es/bali-destino/
 https://www.civitatis.com/es/bali-destino/billete-barco/
-https://www.civitatis.com/es/bali-destino/danza-barong-batubulan/
-https://www.civitatis.com/es/bali-destino/devdan-show/
-https://www.civitatis.com/es/bali-destino/entrada-bali-bird-park/
-https://www.civitatis.com/es/bali-destino/entrada-safari-marine-park/
 https://www.civitatis.com/es/bali-destino/entradas/
 https://www.civitatis.com/es/bali-destino/excursiones/
 https://www.civitatis.com/es/bali-destino/folclore/
 https://www.civitatis.com/es/bali-destino/snorkel/
-https://www.civitatis.com/es/bali-destino/tour-privado-4x4-monte-batur/
-https://www.civitatis.com/es/bali-destino/traslados/
 https://www.civitatis.com/es/bali-destino/trekking/
 https://www.civitatis.com/es/bali-destino/visitas-guiadas/
 https://www.civitatis.com/es/bali-destino/zen/
@@ -1495,6 +1493,7 @@ https://www.civitatis.com/es/bariloche/alquiler-kayak-paddle-surf-bariloche/
 https://www.civitatis.com/es/bariloche/bautismo-buceo-lago-moreno/
 https://www.civitatis.com/es/bariloche/buceo-lago-moreno/
 https://www.civitatis.com/es/bariloche/clase-esqui-cerro-catedral/
+https://www.civitatis.com/es/bariloche/clase-esqui-snowboard-ninos-cerro-catedral/
 https://www.civitatis.com/es/bariloche/clase-privada-esqui-snowboard-cerro-catedral/
 https://www.civitatis.com/es/bariloche/esqui-snowboard-cerro-catedral/
 https://www.civitatis.com/es/bariloche/excursiones/
@@ -1584,6 +1583,7 @@ https://www.civitatis.com/es/bath/visitas-guiadas/
 https://www.civitatis.com/es/battambang/
 https://www.civitatis.com/es/battambang/tour-tuk-tuk-atardecer/
 https://www.civitatis.com/es/battambang/tour-tuk-tuk-battambang/
+https://www.civitatis.com/es/batur/
 https://www.civitatis.com/es/baviera/
 https://www.civitatis.com/es/bayahibe/
 https://www.civitatis.com/es/bayahibe/buceo-bayahibe/
@@ -1635,6 +1635,7 @@ https://www.civitatis.com/es/belen/
 https://www.civitatis.com/es/belen/excursiones/
 https://www.civitatis.com/es/belen/paseo-barco-atardecer-belen/
 https://www.civitatis.com/es/belen/paseo-barco-isla-combu/
+https://www.civitatis.com/es/belen/traslados/
 https://www.civitatis.com/es/belen/visitas-guiadas/
 https://www.civitatis.com/es/belesta/
 https://www.civitatis.com/es/belesta/excursion-4x4-pic-aubeill-amanecer/
@@ -2821,6 +2822,7 @@ https://www.civitatis.com/es/cancun/paseo-caballo-rancho-bonanza/
 https://www.civitatis.com/es/cancun/paseo-camello-riviera-maya/
 https://www.civitatis.com/es/cancun/paseos-barco/
 https://www.civitatis.com/es/cancun/sky-wheel-cancun-artesania-joyeria/
+https://www.civitatis.com/es/cancun/snorkel-moto-agua/
 https://www.civitatis.com/es/cancun/snorkel/
 https://www.civitatis.com/es/cancun/tour-aventura-cancun/
 https://www.civitatis.com/es/cancun/tour-selva-maya-tirolinas/
@@ -3520,7 +3522,6 @@ https://www.civitatis.com/es/cienfuegos/paseo-barco-cienfuegos-castillo-jagua/
 https://www.civitatis.com/es/cienfuegos/paseo-barco-laguna-guanaroca/
 https://www.civitatis.com/es/cienfuegos/visitas-guiadas/
 https://www.civitatis.com/es/cieza/
-https://www.civitatis.com/es/cieza/tour-floracion-cieza/
 https://www.civitatis.com/es/cieza/traslados/
 https://www.civitatis.com/es/cieza/via-ferrata-canon-almadenes/
 https://www.civitatis.com/es/cigales-denominacion-origen/
@@ -3957,6 +3958,7 @@ https://www.civitatis.com/es/corea-del-sur/
 https://www.civitatis.com/es/corea-del-sur/traslados/
 https://www.civitatis.com/es/corfu/
 https://www.civitatis.com/es/corfu/autobus-turistico-corfu/
+https://www.civitatis.com/es/corfu/crazy-sofa-corfu/
 https://www.civitatis.com/es/corfu/excursiones/
 https://www.civitatis.com/es/corfu/paseos-barco/
 https://www.civitatis.com/es/corfu/tour-corfu-palacio-achilleion-paleokastritsa/
@@ -3981,7 +3983,6 @@ https://www.civitatis.com/es/cornella-de-llobregat/tour-rcde-stadium/
 https://www.civitatis.com/es/coron/
 https://www.civitatis.com/es/coron/excursiones/
 https://www.civitatis.com/es/coron/tour-yate-coron/
-https://www.civitatis.com/es/coron/tubing-banana-boat-coron/
 https://www.civitatis.com/es/coron/visita-guiada-coron/
 https://www.civitatis.com/es/coron/visitas-guiadas/
 https://www.civitatis.com/es/corralejo/
@@ -4994,6 +4995,7 @@ https://www.civitatis.com/es/estambul/tour-palacios-mezquitas-estambul/
 https://www.civitatis.com/es/estambul/tour-segway-estambul/
 https://www.civitatis.com/es/estambul/traslados/
 https://www.civitatis.com/es/estambul/visita-guiada-mezquita-azul/
+https://www.civitatis.com/es/estambul/visita-guiada-palacio-dolmabahce/
 https://www.civitatis.com/es/estambul/visita-guiada-santa-sofia/
 https://www.civitatis.com/es/estambul/visitas-guiadas/
 https://www.civitatis.com/es/estambul/zen/
@@ -5340,8 +5342,6 @@ https://www.civitatis.com/es/fort-myers/
 https://www.civitatis.com/es/fortaleza/
 https://www.civitatis.com/es/fortaleza/excursiones/
 https://www.civitatis.com/es/fortaleza/paddle-surf-playa-iracema/
-https://www.civitatis.com/es/fortaleza/tour-4-dias-costa-ventos/
-https://www.civitatis.com/es/fortaleza/tour-4-dias-ruta-falesias/
 https://www.civitatis.com/es/fortaleza/tour-privado-playas-fortaleza/
 https://www.civitatis.com/es/fortaleza/traslado-jericoacoara/
 https://www.civitatis.com/es/fortaleza/traslados/
@@ -5615,6 +5615,11 @@ https://www.civitatis.com/es/getxo/
 https://www.civitatis.com/es/getxo/vuelo-parapente-getxo/
 https://www.civitatis.com/es/ghana/
 https://www.civitatis.com/es/ghana/traslados/
+https://www.civitatis.com/es/gianyar/
+https://www.civitatis.com/es/gianyar/clase-yoga-ubud/
+https://www.civitatis.com/es/gianyar/danza-barong-batubulan/
+https://www.civitatis.com/es/gianyar/entrada-bali-bird-park/
+https://www.civitatis.com/es/gianyar/entrada-safari-marine-park/
 https://www.civitatis.com/es/giardini-naxos/
 https://www.civitatis.com/es/giardini-naxos/avistamiento-delfines-giardini-naxos/
 https://www.civitatis.com/es/giardini-naxos/paseos-barco/
@@ -5758,13 +5763,15 @@ https://www.civitatis.com/es/granada-pais/
 https://www.civitatis.com/es/granada-provincia/
 https://www.civitatis.com/es/granada/
 https://www.civitatis.com/es/granada/albaicin/
-https://www.civitatis.com/es/granada/alhambra-palacios-nazaries-grupo-reducido/
 https://www.civitatis.com/es/granada/alhambra/
 https://www.civitatis.com/es/granada/capilla-real-sepulcro-reyes-catolicos/
 https://www.civitatis.com/es/granada/catedral-granada/
 https://www.civitatis.com/es/granada/entrada-basilica-san-juan-dios/
+https://www.civitatis.com/es/granada/excursion-alpujarra/
+https://www.civitatis.com/es/granada/excursion-sierra-nevada/
 https://www.civitatis.com/es/granada/excursiones/
 https://www.civitatis.com/es/granada/folclore/
+https://www.civitatis.com/es/granada/free-tour-misterios-leyendas-granada/
 https://www.civitatis.com/es/granada/free-tours/
 https://www.civitatis.com/es/granada/hammam-al-andalus-granada/
 https://www.civitatis.com/es/granada/juego-pistas-granada-busqueda-tesoro/
@@ -5776,11 +5783,9 @@ https://www.civitatis.com/es/granada/tour-segway-granada/
 https://www.civitatis.com/es/granada/traslados/
 https://www.civitatis.com/es/granada/trekking/
 https://www.civitatis.com/es/granada/tren-turistico-granada/
-https://www.civitatis.com/es/granada/visita-alhambra-granada-city-pass/
-https://www.civitatis.com/es/granada/visita-alhambra-palacio-carlos-v/
 https://www.civitatis.com/es/granada/visita-alhambra-palacios-nazaries-manana/
-https://www.civitatis.com/es/granada/visita-alhambra-palacios-nazaries-sin-entrada/
 https://www.civitatis.com/es/granada/visita-alhambra-palacios-nazaries-tarde/
+https://www.civitatis.com/es/granada/visita-guiada-alrededores-alhambra/
 https://www.civitatis.com/es/granada/visitas-guiadas/
 https://www.civitatis.com/es/granadilla/
 https://www.civitatis.com/es/granadilla/free-tour-granadilla/
@@ -7641,6 +7646,7 @@ https://www.civitatis.com/es/las-vegas/entradas-sphere/
 https://www.civitatis.com/es/las-vegas/entradas/
 https://www.civitatis.com/es/las-vegas/excursiones/
 https://www.civitatis.com/es/las-vegas/experiencias-extremas/
+https://www.civitatis.com/es/las-vegas/free-tour-las-vegas/
 https://www.civitatis.com/es/las-vegas/go-las-vegas-card/
 https://www.civitatis.com/es/las-vegas/gran-canon-curva-herradura-2-dias/
 https://www.civitatis.com/es/las-vegas/hard-rock-cafe-las-vegas/
@@ -8222,6 +8228,7 @@ https://www.civitatis.com/es/lucca/barranquismo-gargantas-cocciglia/
 https://www.civitatis.com/es/lucca/rafting-rio-lima/
 https://www.civitatis.com/es/lucca/visita-guiada-murallas-lucca/
 https://www.civitatis.com/es/lucca/visitas-guiadas/
+https://www.civitatis.com/es/lucea/
 https://www.civitatis.com/es/lucena/
 https://www.civitatis.com/es/lucena/free-tour-lucena/
 https://www.civitatis.com/es/lucena/visitas-guiadas/
@@ -8276,6 +8283,7 @@ https://www.civitatis.com/es/lusaka/
 https://www.civitatis.com/es/lusaka/safari-6-dias-zambia/
 https://www.civitatis.com/es/lusaka/tour-lusaka/
 https://www.civitatis.com/es/luxemburgo-pais/
+https://www.civitatis.com/es/luxemburgo-pais/traslados/
 https://www.civitatis.com/es/luxemburgo/
 https://www.civitatis.com/es/luxemburgo/beaufort-vianden-ehternach-cascada-schiessentumpel/
 https://www.civitatis.com/es/luxemburgo/excursion-trier/
@@ -8283,6 +8291,7 @@ https://www.civitatis.com/es/luxemburgo/free-tour-luxemburgo/
 https://www.civitatis.com/es/luxemburgo/tour-bicicleta-electrica-luxemburgo/
 https://www.civitatis.com/es/luxemburgo/tour-gastronomico-luxemburgo/
 https://www.civitatis.com/es/luxemburgo/tour-gastronomico-navidad-luxemburgo/
+https://www.civitatis.com/es/luxemburgo/traslados/
 https://www.civitatis.com/es/luxemburgo/tren-turistico-luxemburgo/
 https://www.civitatis.com/es/luxemburgo/visitas-guiadas/
 https://www.civitatis.com/es/luxor/
@@ -8829,6 +8838,7 @@ https://www.civitatis.com/es/maspalomas/paseo-camello-dunas-maspalomas/
 https://www.civitatis.com/es/maspalomas/paseo-camello-valle-mil-palmeras/
 https://www.civitatis.com/es/maspalomas/paseos-barco/
 https://www.civitatis.com/es/maspalomas/tour-bicicleta-maspalomas/
+https://www.civitatis.com/es/maspalomas/tour-buggy-gran-canaria/
 https://www.civitatis.com/es/maspalomas/tour-gastronomico-gran-canaria/
 https://www.civitatis.com/es/maspalomas/tour-patinete-electrico-maspalomas/
 https://www.civitatis.com/es/maspalomas/tour-segway-maspalomas/
@@ -8882,6 +8892,7 @@ https://www.civitatis.com/es/mazatlan/
 https://www.civitatis.com/es/mazatlan/avistamiento-ballenas-mazatlan/
 https://www.civitatis.com/es/mazatlan/entrada-gran-acuario-mazatlan/
 https://www.civitatis.com/es/mazatlan/entrada-museo-nacional-ballena/
+https://www.civitatis.com/es/mazatlan/entrada-shekinah-beach-club/
 https://www.civitatis.com/es/mazatlan/excursiones/
 https://www.civitatis.com/es/mazatlan/farolesa-mazatlan/
 https://www.civitatis.com/es/mazatlan/kayak-snorkel-isla-venados/
@@ -9653,6 +9664,7 @@ https://www.civitatis.com/es/napoles/visita-guiada-sansevero-cristo-velado/
 https://www.civitatis.com/es/napoles/visitas-guiadas/
 https://www.civitatis.com/es/nara/
 https://www.civitatis.com/es/nara/free-tour-nara/
+https://www.civitatis.com/es/nara/traslados/
 https://www.civitatis.com/es/nara/visitas-guiadas/
 https://www.civitatis.com/es/naramata/
 https://www.civitatis.com/es/naramata/paseo-velero-lago-okanagan/
@@ -9940,7 +9952,6 @@ https://www.civitatis.com/es/nueva-york/entradas-musical-chicago-broadway/
 https://www.civitatis.com/es/nueva-york/entradas-musical-rey-leon-broadway/
 https://www.civitatis.com/es/nueva-york/entradas-new-york-knicks-nba/
 https://www.civitatis.com/es/nueva-york/entradas-opera-metropolitan/
-https://www.civitatis.com/es/nueva-york/entradas-stranger-things-broadway/
 https://www.civitatis.com/es/nueva-york/entradas-wicked-broadway/
 https://www.civitatis.com/es/nueva-york/entradas/
 https://www.civitatis.com/es/nueva-york/estatua-libertad/
@@ -10004,6 +10015,8 @@ https://www.civitatis.com/es/nuremberg/tour-ii-guerra-mundial-campo-zeppelin/
 https://www.civitatis.com/es/nuremberg/traslados/
 https://www.civitatis.com/es/nuremberg/tren-turistico-nuremberg/
 https://www.civitatis.com/es/nuremberg/visitas-guiadas/
+https://www.civitatis.com/es/nusa-dua/
+https://www.civitatis.com/es/nusa-dua/devdan-show/
 https://www.civitatis.com/es/nusa-lembongan/
 https://www.civitatis.com/es/nusa-lembongan/barco-islas-gili-bali/
 https://www.civitatis.com/es/nusa-lembongan/buceo/
@@ -10026,13 +10039,11 @@ https://www.civitatis.com/es/oahu/
 https://www.civitatis.com/es/oaxaca/
 https://www.civitatis.com/es/oaxaca/actividades-gastronomicas/
 https://www.civitatis.com/es/oaxaca/excursiones/
+https://www.civitatis.com/es/oaxaca/free-tour-jalatlaco/
 https://www.civitatis.com/es/oaxaca/free-tour-oaxaca/
-https://www.civitatis.com/es/oaxaca/paseo-caballo-oaxaca/
-https://www.civitatis.com/es/oaxaca/paseo-ultraligero-oaxaca/
 https://www.civitatis.com/es/oaxaca/senderismo-sierra-norte-oaxaca/
 https://www.civitatis.com/es/oaxaca/taller-alebrijes-san-martin-ticajete/
 https://www.civitatis.com/es/oaxaca/tour-6-dias-oaxaca-huatulco/
-https://www.civitatis.com/es/oaxaca/tour-aventura-canon-coyote/
 https://www.civitatis.com/es/oaxaca/tour-bicicleta-santa-maria-tule/
 https://www.civitatis.com/es/oaxaca/tour-guelaguetza/
 https://www.civitatis.com/es/oaxaca/tour-guelatao-juarez-capulalpam-mendez/
@@ -11006,6 +11017,7 @@ https://www.civitatis.com/es/playa-del-carmen/pub-crawl-playa-carmen/
 https://www.civitatis.com/es/playa-del-carmen/quads/
 https://www.civitatis.com/es/playa-del-carmen/rio-secreto/
 https://www.civitatis.com/es/playa-del-carmen/senor-frogs-playa-carmen/
+https://www.civitatis.com/es/playa-del-carmen/snorkel-moto-agua/
 https://www.civitatis.com/es/playa-del-carmen/tour-bicicleta-electrica-riviera-maya/
 https://www.civitatis.com/es/playa-del-carmen/tour-bicicleta-playa-carmen/
 https://www.civitatis.com/es/playa-del-carmen/tour-moto-agua-punta-maroma/
@@ -11134,7 +11146,6 @@ https://www.civitatis.com/es/ponte-da-barca/
 https://www.civitatis.com/es/ponte-da-barca/tour-kayak-rio-limia/
 https://www.civitatis.com/es/ponte-da-barca/tour-paddle-surf-rio-limia/
 https://www.civitatis.com/es/ponte-de-lima/
-https://www.civitatis.com/es/ponte-de-lima/tour-buggy-serra-no/
 https://www.civitatis.com/es/pontevedra-provincia/
 https://www.civitatis.com/es/pontevedra/
 https://www.civitatis.com/es/pontevedra/barco-isla-ons/
@@ -11679,7 +11690,6 @@ https://www.civitatis.com/es/puerto-principe/tour-puerto-principe/
 https://www.civitatis.com/es/puerto-rico-espana/
 https://www.civitatis.com/es/puerto-rico-espana/avistamiento-delfines-ballenas-mercadillo-puerto-mogan/
 https://www.civitatis.com/es/puerto-rico-espana/paseos-barco/
-https://www.civitatis.com/es/puerto-rico-espana/tour-buggy-gran-canaria/
 https://www.civitatis.com/es/puerto-rico-espana/traslados/
 https://www.civitatis.com/es/puerto-rico/
 https://www.civitatis.com/es/puerto-sanchez/
@@ -12179,6 +12189,7 @@ https://www.civitatis.com/es/rio-de-janeiro/entrada-roxy-dinner-show/
 https://www.civitatis.com/es/rio-de-janeiro/entradas-aquario/
 https://www.civitatis.com/es/rio-de-janeiro/entradas-carnaval-rio-janeiro/
 https://www.civitatis.com/es/rio-de-janeiro/entradas-futbol-rio-janeiro/
+https://www.civitatis.com/es/rio-de-janeiro/entradas-partido-futbol-maracana/
 https://www.civitatis.com/es/rio-de-janeiro/escalada-morro-babilonia/
 https://www.civitatis.com/es/rio-de-janeiro/escalada-pan-azucar/
 https://www.civitatis.com/es/rio-de-janeiro/estadio-maracana/
@@ -12218,7 +12229,6 @@ https://www.civitatis.com/es/rio-lagartos/
 https://www.civitatis.com/es/rio-lagartos/avistamento-aves-rio-lagartos/
 https://www.civitatis.com/es/rio-lagartos/bano-barro-manglares-rio-lagartos/
 https://www.civitatis.com/es/rio-lagartos/paseos-barco/
-https://www.civitatis.com/es/rio-lagartos/tour-panoramico-coloradas/
 https://www.civitatis.com/es/rio-negro/
 https://www.civitatis.com/es/rio-negro/excursion-crystal-rock-morne/
 https://www.civitatis.com/es/rio-negro/excursiones/
@@ -12484,6 +12494,7 @@ https://www.civitatis.com/es/rurrenabaque/excursion-3-dias-parque-madidi/
 https://www.civitatis.com/es/rurrenabaque/tour-5-dias-madidi-yacuma/
 https://www.civitatis.com/es/rust/
 https://www.civitatis.com/es/rust/entrada-europa-park/
+https://www.civitatis.com/es/rust/entradas-rulantica/
 https://www.civitatis.com/es/ruta-de-las-emociones/
 https://www.civitatis.com/es/sa-coma/
 https://www.civitatis.com/es/sa-coma/catamaran-calas-norte-sa-coma/
@@ -12527,8 +12538,6 @@ https://www.civitatis.com/es/saint-emilion/tour-privado-saint-emilion/
 https://www.civitatis.com/es/saint-emilion/visita-chateau-clos-systey/
 https://www.civitatis.com/es/saint-george/
 https://www.civitatis.com/es/saint-george/tour-saint-george-grand-etang-cascadas-annandale/
-https://www.civitatis.com/es/saint-hippolyte/
-https://www.civitatis.com/es/saint-hippolyte/visita-bodegas-sylvie-fahrer-fils/
 https://www.civitatis.com/es/saint-john-canada/
 https://www.civitatis.com/es/saint-john-canada/visita-guiada-saint-john/
 https://www.civitatis.com/es/saint-john/
@@ -13079,7 +13088,6 @@ https://www.civitatis.com/es/san-rafael-de-la-cruz/visita-guiada-ibiza-botanico-
 https://www.civitatis.com/es/san-rafael/
 https://www.civitatis.com/es/san-rafael/actividades-gastronomicas/
 https://www.civitatis.com/es/san-rafael/excursiones/
-https://www.civitatis.com/es/san-rafael/tour-san-rafael-bodega-chocolateria/
 https://www.civitatis.com/es/san-ramon/
 https://www.civitatis.com/es/san-ramon/excursiones/
 https://www.civitatis.com/es/san-ramon/ruta-indiana-jones-catarata-borgona/
@@ -14994,6 +15002,7 @@ https://www.civitatis.com/es/ubud/tour-3-dias-monte-bromo-ijen/
 https://www.civitatis.com/es/ubud/tour-4x4-caldera-kintamani-amanecer/
 https://www.civitatis.com/es/ubud/tour-bicicleta-campos-arroz/
 https://www.civitatis.com/es/ubud/tour-bicicleta-ubud-kintamani/
+https://www.civitatis.com/es/ubud/tour-privado-4x4-monte-batur/
 https://www.civitatis.com/es/ubud/tour-quad-monte-batur/
 https://www.civitatis.com/es/ucagiz/
 https://www.civitatis.com/es/ucagiz/excursion-kekova-barco/
