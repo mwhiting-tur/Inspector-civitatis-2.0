@@ -1,5 +1,4 @@
 import pandas as pd
-import requests
 import time
 import random
 import os
@@ -7,17 +6,25 @@ import concurrent.futures
 import threading
 from bs4 import BeautifulSoup
 import re
+import glob
 
-# --- 1. LISTA DE TUS 13 PAÍSES ---
-archivos_paises = [
-    "tours_argentina_IDs.csv", "tours_bolivia_IDs.csv", "tours_brasil_IDs.csv",
-    "tours_chile_IDs.csv", "tours_colombia_IDs.csv", "tours_costarica_IDs.csv",
-    "tours_ecuador_IDs.csv", "tours_mexico_IDs.csv", "tours_panama_IDs.csv",
-    "tours_paraguay_IDs.csv", "tours_peru_IDs.csv", "tours_republica_dominicana_IDs.csv",
-    "tours_uruguay_IDs.csv"
-]
+# ── HTTP client: curl_cffi impersonates Chrome's real TLS fingerprint ─────────
+# This is the primary fix for Cloudflare/bot-detection blocks.
+# Install: pip3 install curl_cffi
+from curl_cffi.requests import Session as CurlSession
+_SESSION = CurlSession(impersonate="chrome124")
 
-archivo_salida = 'metadata_latam_FINAL.csv'
+# --- 1. CARGAR ARCHIVO COMBINADO ---
+
+_combined = sorted(glob.glob("gyg/tours_all_IDs*.csv"))
+if not _combined:
+    raise FileNotFoundError(
+        "No se encontró gyg/tours_all_IDs*.csv — ejecuta gyg_sitemap.py primero."
+    )
+archivo_input = _combined[-1]   # most recent (YYYY-MM-DD suffix sorts lexicographically)
+print(f"📂 Usando: {archivo_input}")
+
+archivo_salida = 'metadata_latam_FINAL_mayo.csv'
 
 # --- 2. CABECERAS (Y COOKIES PARA FORZAR USD) ---
 headers = {
@@ -85,65 +92,75 @@ def extraer_metadata(html, url, tour_id, pais, destino):
             f.write(linea)
 
 
+MAX_REINTENTOS_403 = 3
+PAUSA_403_BASE   = 3   # seconds — doubles on each retry (30 → 60 → 120)
+
 def procesar_tour(row, pais):
     tour_id = str(row['tour_id'])
     url = str(row['url'])
-    
-    # AÑADIDO: Extracción limpia del destino
     destino = str(row['ciudad_id']).split('-l')[0].capitalize().replace('-', ' ')
-    
+
     if url in urls_procesadas:
         return None
 
-    try:
-        # AÑADIDO: params={'currency': 'USD'} y cookies para doble confirmación del dólar
-        respuesta = requests.get(
-            url, 
-            headers=headers, 
-            cookies=cookies_usd, 
-            params={'currency': 'USD'}, 
-            timeout=15
-        )
-        
-        if respuesta.status_code == 200:
-            extraer_metadata(respuesta.text, url, tour_id, pais, destino)
-            
-            # TURBO ACTIVADO: Tiempo de espera drásticamente reducido
-            time.sleep(random.uniform(0.2, 0.7)) 
-            return f"✅ {pais} - {tour_id}: Completado"
-            
-        elif respuesta.status_code == 404:
-            return f"🚫 {pais} - {tour_id}: Inactivo/404"
-        else:
-            return f"⚠️ {pais} - {tour_id}: Error {respuesta.status_code}"
-            
-    except Exception as e:
-        return f"❌ {pais} - {tour_id}: Error de red"
+    for intento in range(1, MAX_REINTENTOS_403 + 1):
+        try:
+            respuesta = _SESSION.get(
+                url,
+                headers=headers,
+                cookies=cookies_usd,
+                params={'currency': 'USD'},
+                timeout=15,
+            )
+
+            if respuesta.status_code == 200:
+                extraer_metadata(respuesta.text, url, tour_id, pais, destino)
+                time.sleep(random.uniform(1.0, 2.5))   # human-like pacing
+                return f"✅ {pais} - {tour_id}: Completado"
+
+            elif respuesta.status_code == 403:
+                pausa = PAUSA_403_BASE * (2 ** (intento - 1))   # 30 → 60 → 120 s
+                print(f"🚦 403 en {tour_id} (intento {intento}/{MAX_REINTENTOS_403}) — esperando {pausa}s…")
+                time.sleep(pausa)
+                # last attempt still 403 → skip
+                if intento == MAX_REINTENTOS_403:
+                    return f"🚫 {pais} - {tour_id}: 403 sin resolver tras {MAX_REINTENTOS_403} intentos"
+
+            elif respuesta.status_code == 404:
+                return f"🚫 {pais} - {tour_id}: Inactivo/404"
+
+            else:
+                return f"⚠️ {pais} - {tour_id}: HTTP {respuesta.status_code}"
+
+        except Exception as e:
+            return f"❌ {pais} - {tour_id}: {type(e).__name__}: {e}"
 
 
-# --- 4. BUCLE MAESTRO POR PAÍSES ---
-# TURBO ACTIVADO: 8 Hilos simultáneos (Si ves errores 403, bájalo a 5)
-maximos_hilos = 8
+# --- 4. PROCESAMIENTO COMBINADO ---
+# 3 threads is the safe default. Raise to 5 only if you stop seeing 403s.
+maximos_hilos = 3
 
-for archivo in archivos_paises:
-    ruta_archivo = f"gyg/{archivo}" 
-    
-    if not os.path.exists(ruta_archivo):
-        print(f"⚠️ Archivo no encontrado: {ruta_archivo}. Saltando...")
-        continue
-        
-    pais_actual = archivo.split('_')[1].capitalize()
-    df_tours = pd.read_csv(ruta_archivo, sep=';').fillna("Desconocido")
-    tours_pendientes = [row for index, row in df_tours.iterrows() if str(row['url']) not in urls_procesadas]
-    
-    if not tours_pendientes:
-        print(f"⏩ {pais_actual} ya está 100% completo. Saltando...")
-        continue
-        
-    print(f"\n🌍 INICIANDO PAÍS: {pais_actual} ({len(tours_pendientes)} tours pendientes)")
-    
+df_tours = pd.read_csv(archivo_input, sep=';').fillna("Desconocido")
+tours_pendientes = [
+    row for _, row in df_tours.iterrows()
+    if str(row['url']) not in urls_procesadas
+]
+
+if not tours_pendientes:
+    print("⏩ Todo ya está procesado. Nada pendiente.")
+else:
+    # Summary by country before starting
+    pendientes_por_pais = df_tours[~df_tours['url'].isin(urls_procesadas)].groupby('pais').size()
+    for pais_nombre, n in pendientes_por_pais.items():
+        print(f"  🌍 {pais_nombre}: {n:,} pendientes")
+
+    print(f"\n▶ Total: {len(tours_pendientes):,} actividades — iniciando con {maximos_hilos} hilos…\n")
+
     with concurrent.futures.ThreadPoolExecutor(max_workers=maximos_hilos) as executor:
-        resultados = executor.map(lambda row: procesar_tour(row, pais_actual), tours_pendientes)
+        resultados = executor.map(
+            lambda row: procesar_tour(row, str(row['pais'])),
+            tours_pendientes
+        )
         for resultado in resultados:
             if resultado:
                 print(resultado)
