@@ -1,0 +1,43 @@
+name: GYG Extractor de Precios y Metadata (Manual)
+
+on:
+  workflow_dispatch:   # botón "Run workflow" en GitHub Actions
+
+jobs:
+  extract_pricing:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360   # 6h max — ~16K actividades a ~2s ≈ 3h con 3 hilos
+
+    steps:
+      - name: 📥 Descargar código y archivos del repositorio
+        uses: actions/checkout@v4
+
+      - name: 🐍 Configurar entorno Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 📦 Instalar librerías necesarias
+        run: |
+          python -m pip install --upgrade pip
+          pip install pandas curl_cffi beautifulsoup4
+
+      - name: 🚀 Ejecutar extractor de precios
+        run: python gyg/pricing.py
+
+      - name: 💾 Guardar CSV como Artefacto
+        if: always()   # se sube aunque el script falle a la mitad
+        uses: actions/upload-artifact@v4
+        with:
+          name: metadata-latam-${{ github.run_id }}
+          path: metadata_latam_FINAL_mayo.csv
+          retention-days: 30
+
+      - name: 🔄 Guardar progreso en el repositorio (para continuar en la próxima ejecución)
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add metadata_latam_FINAL_mayo.csv
+          git diff --staged --quiet || git commit -m "chore: Update baseline data [skip ci]"
+          git push
