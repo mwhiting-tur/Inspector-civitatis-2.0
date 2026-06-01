@@ -25,7 +25,7 @@ from rapidfuzz import fuzz, process as fuzz_process
 import numpy as np
 
 # ── Configuración ──────────────────────────────────────────────────────────────
-CSV_INPUT   = "gyg/metadata_latam_BQ.csv"
+CSV_INPUT   = "gyg/tours_all_IDs_2026-05-25.csv"
 CSV_OUTPUT  = "gyg/actividades_unicas_por_destino.csv"
 SIMILARITY  = 85        # umbral % para considerar dos actividades iguales
 DELAY_MIN   = 2.0       # segundos mínimo entre requests

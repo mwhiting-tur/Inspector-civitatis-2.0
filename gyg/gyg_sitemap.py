@@ -1,17 +1,103 @@
 import re
+import time
+import xml.etree.ElementTree as ET
 import pandas as pd
-import os
+import requests
+from datetime import datetime
 
-# 1. Los archivos TXT que descargaste manualmente
-archivos_sitemap = [
-    "gyg/sitemap-activity-0.txt",
-    "gyg/sitemap-activity-1.txt",
-    "gyg/sitemap-activity-2.txt",
-    "gyg/sitemap-activity-3.txt",
-    "gyg/sitemap-activity-4.txt",
-    "gyg/sitemap-activity-5.txt",
-    "gyg/sitemap-activity-6.txt"
-]
+# ── SSL: use macOS system keychain (handles corporate proxy certificates) ──────
+# On corporate networks, HTTPS traffic is intercepted by a proxy with a
+# self-signed CA.  Python's bundled cert store doesn't know about it, but
+# macOS Keychain does.  `truststore` patches ssl to use the system store.
+try:
+    import truststore
+    truststore.inject_into_ssl()   # patches ssl globally — verify=True just works
+    _VERIFY = True
+    print("✅ Using macOS system keychain for SSL verification.")
+except ImportError:
+    # Fallback: disable verification (safe for read-only sitemap crawls).
+    import urllib3
+    urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+    _VERIFY = False
+    print("⚠️  truststore not installed — SSL verification disabled.")
+    print("   Run: pip3 install truststore   to fix this properly.\n")
+
+# ── Configuration ─────────────────────────────────────────────────────────────
+# GYG now publishes 45 activity sitemaps (0–44) in XML format.
+SITEMAP_BASE = "https://www.getyourguide.com/es-es/sitemap-activity-{index}.xml"
+SITEMAP_INDICES = range(0, 45)          # 0 … 44
+
+HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/124.0.0.0 Safari/537.36"
+    ),
+    "Accept": "application/xml, text/xml, */*",
+}
+REQUEST_DELAY = 2          # seconds between sitemap fetches (be polite)
+REQUEST_TIMEOUT = 30       # seconds per request
+MAX_RETRIES = 3            # retry on transient errors
+
+# ── Helpers ───────────────────────────────────────────────────────────────────
+
+def fetch_sitemap(index: int) -> list[str]:
+    """Download one XML sitemap and return a list of <loc> URLs."""
+    url = SITEMAP_BASE.format(index=index)
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            resp = requests.get(
+                url,
+                headers=HEADERS,
+                timeout=REQUEST_TIMEOUT,
+                verify=_VERIFY,        # True (system keychain) or False (disabled)
+            )
+            resp.raise_for_status()
+            root = ET.fromstring(resp.content)
+            # <loc> lives under <url> in the sitemap namespace (or no namespace)
+            locs = [
+                el.text.strip()
+                for el in root.iter()
+                if el.tag in ("{http://www.sitemaps.org/schemas/sitemap/0.9}loc", "loc")
+                and el.text
+            ]
+            print(f"  [{index:02d}] fetched {len(locs):,} URLs")
+            return locs
+        except Exception as exc:
+            print(f"  [{index:02d}] attempt {attempt} failed: {exc}")
+            if attempt < MAX_RETRIES:
+                time.sleep(REQUEST_DELAY * attempt)
+    print(f"  [{index:02d}] ⚠️  giving up after {MAX_RETRIES} attempts")
+    return []
+
+
+def match_cities(urls: list[str], city_slugs: list[str], pais: str) -> list[dict]:
+    """Return one dict per URL that matches any city slug for *pais*."""
+    hits = []
+    slug_set = set(city_slugs)      # O(1) lookup
+    for url in urls:
+        for ciudad_slug in slug_set:
+            if f"/{ciudad_slug}/" in url:
+                match_id = re.search(r"-t(\d+)/?$", url)
+                tour_id = match_id.group(1) if match_id else "N/A"
+                try:
+                    # Toma la parte de la URL después del slug de ciudad,
+                    # luego elimina el sufijo -t{id} del final con regex
+                    # para no cortar en cualquier "-t" dentro del slug.
+                    slug_actividad = url.split(f"/{ciudad_slug}/")[1]
+                    slug_actividad = re.sub(r"-t\d+/?$", "", slug_actividad)
+                    titulo_bruto = slug_actividad.replace("-", " ").title()
+                except IndexError:
+                    titulo_bruto = "Desconocido"
+                hits.append({
+                    "pais": pais,
+                    "ciudad_id": ciudad_slug,
+                    "tour_id": tour_id,
+                    "titulo_referencia": titulo_bruto,
+                    "url": url,
+                })
+                break   # a URL belongs to one city, stop checking others
+    return hits
 
 # 2. Las ciudades de Brasil (añade todas las que obtuviste en tu HTML anterior)
 ciudades_brasil = [
@@ -501,52 +587,59 @@ ciudades_republica_dominicana = [
     "las-terrenas-l32306", "las-galeras-l129528", "el-limon-l177935"
 ]
 
-actividades_encontradas = []
+# ── Country registry ──────────────────────────────────────────────────────────
+# Map each country name → its city-slug list.  Add/remove countries freely.
+PAISES = {
+    "Brasil":                 ciudades_brasil,
+    "México":                 ciudades_mexico,
+    "Argentina":              ciudades_argentina,
+    "Chile":                  ciudades_chile,
+    "Colombia":               ciudades_colombia,
+    "Perú":                   ciudades_peru,
+    "Costa Rica":             ciudades_costa_rica,
+    "Panamá":                 ciudades_panama,
+    "Ecuador":                ciudades_ecuador,
+    "Paraguay":               ciudades_paraguay,
+    "Uruguay":                ciudades_uruguay,
+    "Bolivia":                ciudades_bolivia,
+    "República Dominicana":   ciudades_republica_dominicana,
+}
 
-print("Iniciando búsqueda de tours en Brasil...")
+# ── Main ──────────────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    all_hits: list[dict] = []
 
-# 3. Procesar cada archivo de texto
-for archivo in archivos_sitemap:
-    if os.path.exists(archivo):
-        print(f"-> Analizando {archivo}...")
-        with open(archivo, 'r', encoding='utf-8') as f:
-            # Leer línea por línea
-            for url in f:
-                url = url.strip() # Quitar espacios o saltos de línea
-                
-                # Revisar si alguna ciudad de Brasil está en esta URL
-                for ciudad_slug in ciudades_republica_dominicana:
-                    if f"/{ciudad_slug}/" in url:
-                        # Extraer el ID (todo lo que está entre '-t' y '/')
-                        match_id = re.search(r'-t(\d+)/', url)
-                        tour_id = match_id.group(1) if match_id else "N/A"
-                        
-                        # Limpiar un poco el título referencial
-                        try:
-                            titulo_bruto = url.split(f"/{ciudad_slug}/")[1].split('-t')[0].replace('-', ' ').capitalize()
-                        except IndexError:
-                            titulo_bruto = "Desconocido"
-                        
-                        actividades_encontradas.append({
-                            "pais": "República Dominicana",
-                            "ciudad_id": ciudad_slug,
-                            "tour_id": tour_id,
-                            "titulo_referencia": titulo_bruto,
-                            "url": url
-                        })
+    print(f"Descargando {len(list(SITEMAP_INDICES))} sitemaps de GYG…\n")
+
+    for idx in SITEMAP_INDICES:
+        urls = fetch_sitemap(idx)
+
+        for pais, slugs in PAISES.items():
+            hits = match_cities(urls, slugs, pais)
+            all_hits.extend(hits)
+
+        time.sleep(REQUEST_DELAY)   # be polite between requests
+
+    if not all_hits:
+        print("\n⚠️  No se encontró ninguna actividad. "
+              "Verifica la conectividad o las listas de ciudades.")
     else:
-        print(f"⚠️ Archivo no encontrado: {archivo}. Saltando...")
+        df = pd.DataFrame(all_hits).drop_duplicates(subset=["tour_id"])
+        print(f"\n✅ Total actividades únicas: {len(df):,}")
 
-# 4. Exportar los resultados
-if actividades_encontradas:
-    df = pd.DataFrame(actividades_encontradas)
-    # Eliminar posibles duplicados
-    df = df.drop_duplicates(subset=['tour_id'])
-    
-    archivo_salida = 'gyg/tours_republica_dominicana_IDs.csv'
-    df.to_csv(archivo_salida, index=False, sep=';', encoding='utf-8-sig')
-    
-    print(f"\n✅ ¡ÉXITO ROTUNDO! Se encontraron {len(df)} tours y se guardaron en '{archivo_salida}'")
-    print(df.head())
-else:
-    print("\nNo se encontraron tours. Revisa la lista de ciudades o asegúrate de haber descargado los archivos TXT correctos.")
+        # ── One CSV per country ──
+        hoy = datetime.today().strftime("%Y-%m-%d")
+        for pais, grupo in df.groupby("pais"):
+            slug_pais = (
+                pais.lower()
+                .replace(" ", "_")
+                .replace("á", "a").replace("é", "e").replace("í", "i")
+                .replace("ó", "o").replace("ú", "u").replace("ñ", "n")
+            )
+            archivo_salida = f"gyg/tours_{slug_pais}_IDs_{hoy}.csv"
+            grupo.to_csv(archivo_salida, index=False, sep=";", encoding="utf-8-sig")
+            print(f"  {pais}: {len(grupo):,} actividades → {archivo_salida}")
+
+        # ── Combined CSV ──
+        df.to_csv(f"gyg/tours_all_IDs_{hoy}.csv", index=False, sep=";", encoding="utf-8-sig")
+        print(f"\n📦 CSV combinado → gyg/tours_all_IDs_{hoy}.csv")
