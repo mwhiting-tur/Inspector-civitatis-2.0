@@ -4,12 +4,12 @@ import unicodedata
 def limpiar_texto(texto):
     """
     Convierte el texto a minúsculas, quita espacios en los extremos 
-    y elimina los acentos (diacríticos).
+    y elimina los acentos (diacríticos). 
     """
     if pd.isna(texto):
         return ""
     
-    # Convertir a string, minúsculas y quitar espacios extra
+    # Convertir a string, minúsculas y quitar espacios extra 
     texto = str(texto).lower().strip()
     
     # Quitar acentos
