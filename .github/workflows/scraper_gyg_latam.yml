@@ -27,7 +27,7 @@ jobs:
         run: pip install pandas requests
 
       - name: Ejecutar Script de Sitemaps
-        run: python gyg_sitemap_github.py
+        run: python gyg/gyg_sitemap_github.py
 
       - name: Guardar CSV de URLs como Artefacto temporal
         uses: actions/upload-artifact@v4
@@ -65,4 +65,4 @@ jobs:
         run: pip install pandas requests beautifulsoup4 google-cloud-bigquery[pandas] pyarrow db-dtypes
 
       - name: Ejecutar Script de Precios y Subir a BQ
-        run: python gyg_precios_github.py
+        run: python gyg/gyg_precios_github.py
