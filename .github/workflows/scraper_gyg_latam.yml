@@ -29,7 +29,7 @@ jobs:
         run: pip install pandas requests google-cloud-bigquery[pandas] pyarrow db-dtypes
 
       - name: Ejecutar Script de Sitemaps y Preparar BQ
-        run: python script_sitemaps.py
+        run: python gyg/gyg_sitemap_github.py
 
       - name: Subir CSVs de todos los países como Artefactos
         uses: actions/upload-artifact@v4
@@ -74,4 +74,4 @@ jobs:
 
       - name: Ejecutar Scraper para ${{ matrix.country }}
         # Pasamos el nombre del país como argumento al script de Python
-        run: python script_precios.py ${{ matrix.country }}
+        run: python gyg/gyg_precios_github.py ${{ matrix.country }}
