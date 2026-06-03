@@ -5,11 +5,14 @@ import sys
 import pandas as pd
 import io
 import time
+import hashlib
+import requests
+from bs4 import BeautifulSoup
+import re
 from datetime import datetime
 from google.cloud import bigquery
 from google.api_core.exceptions import TooManyRequests
 from drivers.civitatis_semanal import CivitatisScraperSemanal
-import hashlib
 
 def cargar_destinos_civitatis(paises):
     ruta_json = 'destinos_civitatis.json'
@@ -32,13 +35,13 @@ async def ejecutar_civitatis_semanal(pais_objetivo, moneda_objetivo):
     timestamp = datetime.now().strftime("%Y%m%d")
     nombre_archivo = f"data/precios_{pais_objetivo.lower()}_{moneda_objetivo.lower()}_{timestamp}.csv"
     
-    print(f"🚀 Iniciando scraping para {pais_objetivo} usando {moneda_objetivo}")
+    print(f"🚀 Iniciando scraping de lista para {pais_objetivo} usando {moneda_objetivo}")
     
-    # 1. Ejecutar Scraper Playwright
+    # 1. Ejecutar Scraper Playwright (Rápido, solo listas)
     scraper = CivitatisScraperSemanal()
     await scraper.extract_list(destinos, nombre_archivo, currency_code=moneda_objetivo)
     
-    # 2. Transformar y subir a BigQuery
+    # 2. Transformar, extraer descripciones y subir a BigQuery
     if os.path.exists(nombre_archivo):
         print(f"\nTransformando datos de {pais_objetivo} para BigQuery...")
         df = pd.read_csv(nombre_archivo)
@@ -47,7 +50,62 @@ async def ejecutar_civitatis_semanal(pais_objetivo, moneda_objetivo):
             print("El CSV está vacío, no hay datos para subir.")
             return
 
-        # A) Construir la columna "content" con los metadatos que extrajo Civitatis
+        # =================================================================
+        # NUEVO BLOQUE: Extracción de Descripciones y Detalles en 2do Plano
+        # =================================================================
+        print(f"Obteniendo descripciones para {len(df)} actividades (esto tomará unos minutos)...")
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "Accept-Language": "es-ES,es;q=0.9"
+        }
+        
+        descripciones_extraidas = []
+        total = len(df)
+        
+        for i, url in enumerate(df['url_fuente']):
+            if i % 50 == 0:
+                print(f"  Procesando textos [{i+1}/{total}]...")
+            
+            texto_final = ""
+            try:
+                # Hacemos una petición rápida a la página de la actividad
+                r = requests.get(url, headers=headers, timeout=15)
+                if r.status_code == 200:
+                    soup = BeautifulSoup(r.text, "html.parser")
+                    partes_texto = []
+                    
+                    # A) Buscar sección de Descripción e Itinerario
+                    sec_desc = soup.find(id="descripcion")
+                    if sec_desc:
+                        partes_texto.append("Descripción: " + sec_desc.get_text(separator=" ", strip=True))
+                        
+                    # B) Buscar sección de Detalles (Duración, Inclusiones, etc.)
+                    sec_det = soup.find(id="detalles")
+                    if sec_det:
+                        # LIMPIEZA: Eliminamos el bot de chat y elementos basura antes de extraer texto
+                        for tag_basura in sec_det.find_all(['civitatis-bot-ui', 'script', 'style', 'div', 'svg']):
+                            # Excluimos div genéricos de la destrucción para no borrar el contenido real, 
+                            # solo matamos explícitamente el bot y scripts.
+                            if tag_basura.name in ['civitatis-bot-ui', 'script', 'style', 'svg']:
+                                tag_basura.decompose()
+                                
+                        # Usamos " | " como separador para que características como "Duración | 3 horas" se lean claro
+                        partes_texto.append("Detalles: " + sec_det.get_text(separator=" | ", strip=True))
+                        
+                    # Unir y limpiar excesos de espacios
+                    texto_unido = " || ".join(partes_texto)
+                    texto_final = re.sub(r'\s+', ' ', texto_unido)[:5000] 
+            except Exception as e:
+                pass
+            
+            descripciones_extraidas.append(texto_final)
+            time.sleep(1) # Pausa amigable para no saturar los servidores de Civitatis
+            
+        df['texto_html'] = descripciones_extraidas
+        # =================================================================
+
+
+        # A) Construir la columna "content" final (Metadata + Descripción)
         def build_content(row):
             parts = []
             if pd.notna(row.get('opiniones')) and row['opiniones'] > 0:
@@ -58,24 +116,26 @@ async def ejecutar_civitatis_semanal(pais_objetivo, moneda_objetivo):
                 parts.append(f"Rating: {row['rating']} / 10")
             if pd.notna(row.get('cancelacion')) and row['cancelacion'] > 0:
                 parts.append(f"Cancelación: {int(row['cancelacion'])} horas")
-            return " | ".join(parts) if parts else "Sin información adicional"
+                
+            meta = " | ".join(parts) if parts else "Sin metadata"
+            
+            # Anexamos la descripción que acabamos de extraer
+            desc = str(row.get('texto_html', ''))
+            if desc and desc != 'nan' and desc.strip():
+                return f"{meta} || {desc}"
+            return meta
             
         df['content'] = df.apply(build_content, axis=1)
 
+        # B) Generador de ID Único Permanente (Hash MD5)
         def generar_id_unico(url):
-            if pd.isna(url):
-                return None
-            # Limpiamos la URL (quitamos parámetros '?' y slashes finales)
+            if pd.isna(url): return None
+            # Limpiamos parámetros de rastreo
             url_limpia = str(url).strip().split('?')[0].rstrip('/')
-            
-            # Generamos un hash MD5
             hash_hex = hashlib.md5(url_limpia.encode('utf-8')).hexdigest()
-            
-            # Convertimos los primeros 15 caracteres hexadecimales a un número entero.
-            # Esto garantiza que sea un número único y que no exceda el límite de Int64 de BigQuery.
-            return int(hash_hex[:15], 16)
+            return int(hash_hex[:15], 16) # Convertimos a entero seguro para Int64
 
-        # B) Crear el DataFrame final con las columnas exactas
+        # C) Crear el DataFrame final con las columnas exactas
         df_final = pd.DataFrame()
         df_final['id'] = df['url_fuente'].apply(generar_id_unico).astype('Int64')
         df_final['pais'] = df['pais'].astype('string')
@@ -85,12 +145,12 @@ async def ejecutar_civitatis_semanal(pais_objetivo, moneda_objetivo):
         df_final['content'] = df['content'].astype('string')
         df_final['url'] = df['url_fuente'].astype('string')
 
-        # C) Subir a BigQuery con Exponential Backoff
-        table_id = "datatur.dbt_tools.civitatis_products_latam" # ⚠️ Verifica este nombre
+        # D) Subir a BigQuery con Exponential Backoff
+        table_id = "datatur.supply.civitatis_tours_precios_actual" 
         bq_client = bigquery.Client()
         
         job_config = bigquery.LoadJobConfig(
-            write_disposition="WRITE_APPEND", # Agrega a la tabla limpia sin borrar
+            write_disposition="WRITE_APPEND", 
             source_format=bigquery.SourceFormat.PARQUET,
         )
 
