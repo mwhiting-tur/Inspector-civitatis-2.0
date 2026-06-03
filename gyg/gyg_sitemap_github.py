@@ -114,12 +114,12 @@ if __name__ == "__main__":
     # Creamos un DF vacío pero con la estructura estricta para asegurar que la tabla exista y esté en blanco
     df_schema = pd.DataFrame({
         'id': pd.Series(dtype='Int64'),
-        'pais': pd.Series(dtype='str'),
-        'destino': pd.Series(dtype='str'),
-        'actividad': pd.Series(dtype='str'),
+        'pais': pd.Series(dtype='string'),
+        'destino': pd.Series(dtype='string'),
+        'actividad': pd.Series(dtype='string'),
         'precio_usd': pd.Series(dtype='float64'),
-        'content': pd.Series(dtype='str'),
-        'url': pd.Series(dtype='str')
+        'content': pd.Series(dtype='string'),
+        'url': pd.Series(dtype='string')
     })
     
     job_config = bigquery.LoadJobConfig(

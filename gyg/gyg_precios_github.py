@@ -116,7 +116,13 @@ df_final = df_final.rename(columns={
 
 df_final['id'] = pd.to_numeric(df_final['id'], errors='coerce').astype('Int64')
 df_final['precio_usd'] = pd.to_numeric(df_final['precio_usd'], errors='coerce')
-df_final['content'] = df_final['content'].astype(str)
+
+# Forzar explícitamente a tipo string las columnas de texto
+df_final['pais'] = df_final['pais'].astype('string')
+df_final['destino'] = df_final['destino'].astype('string')
+df_final['actividad'] = df_final['actividad'].astype('string')
+df_final['content'] = df_final['content'].astype('string')
+df_final['url'] = df_final['url'].astype('string')
 
 columnas_finales = ['id', 'pais', 'destino', 'actividad', 'precio_usd', 'content', 'url']
 df_final = df_final[columnas_finales]
