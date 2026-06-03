@@ -29,7 +29,7 @@ jobs:
         run: pip install pandas google-cloud-bigquery[pandas] pyarrow db-dtypes
 
       - name: Ejecutar script de limpieza BQ
-        run: python setup_bq_civitatis.py
+        run: python civitatis/setup_bq_civitatis.py
 
   # ==========================================
   # JOB 2: Scraper Playwright en Matriz Paralela
