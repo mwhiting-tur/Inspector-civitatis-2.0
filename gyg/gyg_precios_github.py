@@ -78,9 +78,14 @@ for i, row in df.iterrows():
 
         precio_usd = None
         if precio_original:
-            texto_limpio = precio_original.replace(".", "").replace(",", "")
+            # EL CAMBIO: Usamos Regex para eliminar puntos, comas y cualquier tipo de espacio (incluyendo \xa0)
+            texto_limpio = re.sub(r'[\.\,\s\xa0]', '', precio_original)
+            
+            # Ahora extraemos los bloques numéricos contiguos
             numeros = re.findall(r'\d+', texto_limpio)
+            
             if numeros:
+                # Tomamos el primer número (precio original, ignorando tachados)
                 precio_usd = float(numeros[0])
                 
         # Contenido
@@ -128,7 +133,7 @@ columnas_finales = ['id', 'pais', 'destino', 'actividad', 'precio_usd', 'content
 df_final = df_final[columnas_finales]
 
 # Carga a BigQuery (AGREGANDO AL FINAL DE LA TABLA)
-table_id = "datatur.supply.gyg_tours_precios_actual"
+table_id = "datatur.dbt_tools.gyg_products_latam"
 bq_client = bigquery.Client()
 
 # ATENCIÓN AQUÍ: Usamos WRITE_APPEND para que los 13 servidores sumen sus datos sin borrarse entre sí
