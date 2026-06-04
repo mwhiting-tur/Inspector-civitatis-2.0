@@ -1,11 +1,9 @@
-name: Ejecutar Scraping Semanal
+name: Ejecutar Scraping Semanal Civitatis Full
 
 on:
   workflow_dispatch:
-  # Ejecutar automáticamente los viernes a las 11:00 UTC 
-  # (Que corresponde a las 08:00 AM hora Chile Verano / 07:00 AM Chile Invierno)
   schedule:
-    - cron: '0 11 * * 5'
+    - cron: '0 10 * * 5'
 
 jobs:
   run-scraper:
@@ -94,7 +92,6 @@ jobs:
           - country: "República Checa"
             currency: "EUR"
 
-
     steps:
       - name: Descargar código del repo
         uses: actions/checkout@v4
@@ -104,10 +101,15 @@ jobs:
         with:
           python-version: '3.10'
 
+      - name: Autenticar en Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
       - name: Instalar dependencias de Python
         run: |
           python -m pip install --upgrade pip
-          pip install playwright pandas
+          pip install playwright pandas google-cloud-bigquery[pandas] pyarrow db-dtypes
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Instalar Navegador y Dependencias de Sistema
@@ -115,7 +117,7 @@ jobs:
           python -m playwright install chromium --with-deps
 
       - name: Ejecutar el script por país y moneda
-        run: python main_semanal.py "${{ matrix.country }}" "${{ matrix.currency }}"
+        run: python gyg/main_semanal_full.py "${{ matrix.country }}" "${{ matrix.currency }}"
 
       - name: Subir CSV resultante
         uses: actions/upload-artifact@v4
@@ -126,7 +128,6 @@ jobs:
 
   merge-results:
     needs: run-scraper
-    # Ejecutamos el job incluso si algún país falla en la matrix (para salvar los que sí funcionaron)
     if: always()
     runs-on: ubuntu-22.04
 
