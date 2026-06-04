@@ -84,7 +84,7 @@ jobs:
       - name: Instalar dependencias de Python
         run: |
           python -m pip install --upgrade pip
-          pip install playwright pandas google-cloud-bigquery[pandas] pyarrow db-dtypes
+          pip install playwright pandas google-cloud-bigquery[pandas] pyarrow db-dtypes beautifulsoup4 requests
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Instalar Navegador y Dependencias de Sistema
