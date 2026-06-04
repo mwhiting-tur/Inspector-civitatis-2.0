@@ -110,14 +110,14 @@ class CivitatisScraperSemanal(BaseScraper):
                 
                 try:
                     # 1. Navegación Robusta
-                    await page.goto(url_destino, wait_until="networkidle", timeout=60000)
+                    await page.goto(url_destino, wait_until="domcontentloaded", timeout=60000)
                     await self._handle_overlays(page)
 
                     # 2. Click en "Ver todo" con espera
                     view_all = await page.query_selector(self.SELECTORS["view_all_btn"])
                     if view_all and await view_all.is_visible():
                         await page.evaluate("(el) => el.click()", view_all)
-                        await page.wait_for_load_state("networkidle")
+                        await page.wait_for_load_state("domcontentloaded")
                         await asyncio.sleep(2) # Pausa de seguridad
 
                     # 3. ESPERA CRÍTICA: Asegurar que hay tarjetas antes de empezar el bucle
@@ -199,7 +199,7 @@ class CivitatisScraperSemanal(BaseScraper):
                         next_btn = await page.query_selector(self.SELECTORS["next_btn"])
                         if next_btn and await next_btn.is_visible():
                             await page.evaluate("(el) => el.click()", next_btn)
-                            await page.wait_for_load_state("networkidle")
+                            await page.wait_for_load_state("domcontentloaded")
                             await asyncio.sleep(1)
                         else:
                             break
@@ -248,7 +248,7 @@ class CivitatisScraperSemanal(BaseScraper):
             target = self.SELECTORS["currency_option"].format(code=currency_code)
             await page.wait_for_selector(target, state="visible")
             await page.click(target)
-            await page.wait_for_load_state("networkidle")
+            await page.wait_for_load_state("domcontentloaded")
         except Exception: 
             pass 
 
