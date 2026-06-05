@@ -20,8 +20,6 @@ jobs:
 
           - country: "Brasil"
             currency: "BRL"
-          - country: "Bolivia"
-            currency: "USD"
           - country: "Paraguay"
             currency: "USD"
           - country: "Uruguay"
