@@ -8,6 +8,7 @@ import time
 from datetime import datetime
 from google.cloud import bigquery
 from google.api_core.exceptions import TooManyRequests
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from drivers.civitatis_semanal import CivitatisScraperSemanal
 
 # --- Funciones Auxiliares ---

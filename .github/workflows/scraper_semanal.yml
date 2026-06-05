@@ -99,7 +99,7 @@ jobs:
       - name: Configurar Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Autenticar en Google Cloud
         uses: google-github-actions/auth@v2
