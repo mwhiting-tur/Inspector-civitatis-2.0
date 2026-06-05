@@ -108,8 +108,10 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
 
       - name: Instalar Navegador y Dependencias de Sistema
+        env:
+          NODE_TLS_REJECT_UNAUTHORIZED: 0
         run: |
-          python -m playwright install chromium --with-deps
+          python -m playwright install chromium
 
       - name: Ejecutar el script por país y moneda
         run: python civitatis/main_semanal_full.py "${{ matrix.country }}" "${{ matrix.currency }}"
