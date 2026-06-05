@@ -6,7 +6,7 @@ print("Limpiando tabla de Civitatis en BigQuery y fijando esquema...")
 
 # ⚠️ IMPORTANTE: Asegúrate de que el nombre de la tabla sea correcto para Civitatis.
 # No uses la misma tabla de GYG o este script la borrará.
-table_id = "datatur.supply.civitatis_tours_precios_actual" 
+table_id = "datatur.dbt_tools.civitatis_products_latam" 
 
 bq_client = bigquery.Client()
 

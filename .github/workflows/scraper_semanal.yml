@@ -117,7 +117,7 @@ jobs:
           python -m playwright install chromium --with-deps
 
       - name: Ejecutar el script por país y moneda
-        run: python gyg/main_semanal_full.py "${{ matrix.country }}" "${{ matrix.currency }}"
+        run: python civitatis/main_semanal_full.py "${{ matrix.country }}" "${{ matrix.currency }}"
 
       - name: Subir CSV resultante
         uses: actions/upload-artifact@v4

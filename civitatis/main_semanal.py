@@ -146,7 +146,7 @@ async def ejecutar_civitatis_semanal(pais_objetivo, moneda_objetivo):
         df_final['url'] = df['url_fuente'].astype('string')
 
         # D) Subir a BigQuery con Exponential Backoff
-        table_id = "datatur.supply.civitatis_tours_precios_actual" 
+        table_id = "datatur.dbt_tools.civitatis_products_latam" 
         bq_client = bigquery.Client()
         
         job_config = bigquery.LoadJobConfig(

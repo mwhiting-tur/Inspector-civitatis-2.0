@@ -1,11 +1,14 @@
 import requests
+import urllib3
 import csv
 import datetime
 
-def generar_historial_2025_2026():
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+def generar_historial():
     # --- CONFIGURACIÓN ---
-    archivo_salida = "historial_monedas_2025_2026.csv"
-    fecha_inicio_global = "2025-03-01" 
+    archivo_salida = "historial_monedas_faltantes_2026.csv"
+    fecha_inicio_global = "2026-01-01" 
     
     hoy = datetime.date.today()
     ayer = hoy - datetime.timedelta(days=1)
@@ -13,7 +16,8 @@ def generar_historial_2025_2026():
     anos_clp = [2025, 2026] 
     
     filas_csv = []
-    monedas_destino = "COP,BRL,ARS,PEN,MXN"
+    #monedas_destino = "COP,BRL,ARS,PEN,MXN"
+    monedas_destino = "CRC,BOB,PYG,UYU,PAB,DOP,AWG"
     print(f"--- Generando historial desde {fecha_inicio_global} hasta {fecha_fin_global} ---")
 
     # ---------------------------------------------------------
@@ -23,7 +27,7 @@ def generar_historial_2025_2026():
     url_usd = f"https://api.fxratesapi.com/timeseries?start_date={fecha_inicio_global}&end_date={fecha_fin_global}&base=USD&currencies={monedas_destino}&format=json"
     
     try:
-        res_usd = requests.get(url_usd)
+        res_usd = requests.get(url_usd, verify=False)
         if res_usd.status_code == 200 and res_usd.json().get("success"):
             for fecha, monedas in res_usd.json().get("rates", {}).items():
                 fecha_limpia = fecha.split("T")[0]
@@ -42,7 +46,7 @@ def generar_historial_2025_2026():
     url_clp = f"https://api.fxratesapi.com/timeseries?start_date={fecha_inicio_global}&end_date={fecha_fin_global}&base=CLP&currencies={monedas_destino}&format=json"
     
     try:
-        res_clp_fx = requests.get(url_clp)
+        res_clp_fx = requests.get(url_clp, verify=False)
         if res_clp_fx.status_code == 200 and res_clp_fx.json().get("success"):
             for fecha, monedas in res_clp_fx.json().get("rates", {}).items():
                 fecha_limpia = fecha.split("T")[0]
@@ -57,6 +61,7 @@ def generar_historial_2025_2026():
     # ---------------------------------------------------------
     # PARTE 2: Peso Chileno (Mindicador.cl) con Relleno
     # ---------------------------------------------------------
+    """"
     print(f"2. Descargando USD->CLP de mindicador.cl años {anos_clp} y rellenando vacíos...")
     clp_historico = {}
     
@@ -91,7 +96,7 @@ def generar_historial_2025_2026():
         if ultimo_valor_conocido is not None:
             filas_csv.append({"fecha": fecha_str, "moneda_base": "USD", "moneda_destino": "CLP", "tasa_cambio": ultimo_valor_conocido})
         fecha_actual += datetime.timedelta(days=1)
-
+    """
     # ---------------------------------------------------------
     # PARTE 3: Guardar CSV
     # ---------------------------------------------------------
@@ -108,4 +113,4 @@ def generar_historial_2025_2026():
             print(f"Error escribiendo archivo: {e}")
 
 if __name__ == "__main__":
-    generar_historial_2025_2026()
+    generar_historial()
