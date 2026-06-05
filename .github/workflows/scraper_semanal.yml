@@ -8,9 +8,13 @@ on:
 jobs:
   run-scraper:
     runs-on: self-hosted
+    env:  # <--- AGREGA ESTO
+      RUNNER_TOOL_CACHE: /Users/mwhiting/actions-runner/_work/_tool
+      AGENT_TOOLSDIRECTORY: /Users/mwhiting/actions-runner/_work/_tool
     strategy:
       fail-fast: false
-      max-parallel: 5
+      max-parallel: 2 # (Recomendado bajarlo para tu Mac)
+
       matrix:
         include:
 
@@ -120,7 +124,10 @@ jobs:
   merge-results:
     needs: run-scraper
     if: always()
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
+    env:  # <--- AGREGA ESTO TAMBIÉN AQUÍ
+      RUNNER_TOOL_CACHE: /Users/mwhiting/actions-runner/_work/_tool
+      AGENT_TOOLSDIRECTORY: /Users/mwhiting/actions-runner/_work/_tool
 
     steps:
       - name: Descargar todos los artefactos
