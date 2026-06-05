@@ -17,10 +17,15 @@ class BaseScraper:
         try:
             # NO usamos executable_path. Playwright usará el que instalamos
             # con el comando 'playwright install chromium' en el YAML.
-            
+            """ # para github actions
             self.browser = await self.playwright.chromium.launch(
                 headless=headless,
                 args=["--disable-gpu", "--no-sandbox"] # Recomendado para servidores Linux
+            )
+            """
+            self.browser = await self.playwright.chromium.launch(
+                headless=headless,
+                channel="chrome"  # <--- Usa el Chrome oficial de tu Mac optimizado para Apple Silicon
             )
             """
             # SOLO PARA TEST LOCAL SI FALLA LA DESCARGA
