@@ -10,10 +10,7 @@ jobs:
   # JOB 1: Extraer Sitemaps y Limpiar BigQuery
   # ==========================================
   extract_sitemaps:
-    runs-on: self-hosted
-    env:
-      RUNNER_TOOL_CACHE: /Users/mwhiting/actions-runner/_work/_tool
-      AGENT_TOOLSDIRECTORY: /Users/mwhiting/actions-runner/_work/_tool
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
@@ -46,13 +43,9 @@ jobs:
   # ==========================================
   extract_prices_and_upload:
     needs: extract_sitemaps
-    runs-on: self-hosted
-    env:
-      RUNNER_TOOL_CACHE: /Users/mwhiting/actions-runner/_work/_tool
-      AGENT_TOOLSDIRECTORY: /Users/mwhiting/actions-runner/_work/_tool
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false # Si un país falla, los demás continúan trabajando
-      max-parallel: 2 # Recomendado bajarlo para tu Mac
       matrix:
         # Los nombres exactos que usaremos para separar los archivos
         country: [Brasil, Mexico, Argentina, Chile, Colombia, Peru, Costa_Rica, Panama, Ecuador, Paraguay, Uruguay, Bolivia, Republica_Dominicana]
@@ -81,4 +74,6 @@ jobs:
 
       - name: Ejecutar Scraper para ${{ matrix.country }}
         # Pasamos el nombre del país como argumento al script de Python
+        env:
+          APIFY_PROXY_PASSWORD: ${{ secrets.APIFY_PROXY_PASSWORD }}
         run: python gyg/gyg_precios_github.py ${{ matrix.country }}

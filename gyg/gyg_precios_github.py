@@ -1,4 +1,6 @@
+import os
 import sys
+import uuid
 import requests
 import pandas as pd
 import re
@@ -20,6 +22,24 @@ headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Accept-Language": "es-ES,es;q=0.9,en-US;q=0.8,en;q=0.7",
 }
+
+# GYG bloquea las IPs de los runners de GitHub Actions. Enrutamos cada
+# request por Apify Proxy (grupo residencial) con una sesión distinta
+# para que cada tour salga desde una IP diferente.
+APIFY_PROXY_PASSWORD = os.environ.get("APIFY_PROXY_PASSWORD")
+APIFY_PROXY_GROUPS = os.environ.get("APIFY_PROXY_GROUPS", "RESIDENTIAL")
+
+if not APIFY_PROXY_PASSWORD:
+    print("Error: Falta la variable de entorno APIFY_PROXY_PASSWORD (secret de GitHub Actions).")
+    sys.exit(1)
+
+def build_proxies():
+    session_id = uuid.uuid4().hex[:16]
+    proxy_url = (
+        f"http://groups-{APIFY_PROXY_GROUPS},session-{session_id}:"
+        f"{APIFY_PROXY_PASSWORD}@proxy.apify.com:8000"
+    )
+    return {"http": proxy_url, "https": proxy_url}
 
 def extraer_contenido(soup):
     partes = []
@@ -61,7 +81,7 @@ for i, row in df.iterrows():
         print(f"Procesando [{i+1}/{total}]...")
 
     try:
-        r = requests.get(url, headers=headers, timeout=15, allow_redirects=True)
+        r = requests.get(url, headers=headers, timeout=15, allow_redirects=True, proxies=build_proxies())
         if r.status_code != 200:
             results.append({"tour_id": tour_id, "precio_usd": None, "content": None})
             time.sleep(1)
