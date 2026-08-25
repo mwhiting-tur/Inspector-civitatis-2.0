@@ -6,6 +6,7 @@ import time
 from bs4 import BeautifulSoup
 import io
 from google.cloud import bigquery
+from datetime import datetime
 
 # Recibir el nombre del país desde el argumento del sistema (GitHub Actions Matrix)
 if len(sys.argv) < 2:
@@ -128,8 +129,10 @@ df_final['destino'] = df_final['destino'].astype('string')
 df_final['actividad'] = df_final['actividad'].astype('string')
 df_final['content'] = df_final['content'].astype('string')
 df_final['url'] = df_final['url'].astype('string')
+df_final["fecha_scraper"] = datetime.now().strftime("%Y-%m-%d")
+df_final["fecha_scraper"] = df_final["fecha_scraper"].astype("string")
 
-columnas_finales = ['id', 'pais', 'destino', 'actividad', 'precio_usd', 'content', 'url']
+columnas_finales = ['id', 'pais', 'destino', 'actividad', 'precio_usd', 'content', 'url', 'fecha_scraper']
 df_final = df_final[columnas_finales]
 
 # Carga a BigQuery (AGREGANDO AL FINAL DE LA TABLA)

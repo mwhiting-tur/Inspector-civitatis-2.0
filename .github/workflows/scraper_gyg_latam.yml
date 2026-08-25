@@ -10,7 +10,10 @@ jobs:
   # JOB 1: Extraer Sitemaps y Limpiar BigQuery
   # ==========================================
   extract_sitemaps:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    env:
+      RUNNER_TOOL_CACHE: /Users/mwhiting/actions-runner/_work/_tool
+      AGENT_TOOLSDIRECTORY: /Users/mwhiting/actions-runner/_work/_tool
     steps:
       - name: Checkout del código
         uses: actions/checkout@v4
@@ -43,9 +46,13 @@ jobs:
   # ==========================================
   extract_prices_and_upload:
     needs: extract_sitemaps
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
+    env:
+      RUNNER_TOOL_CACHE: /Users/mwhiting/actions-runner/_work/_tool
+      AGENT_TOOLSDIRECTORY: /Users/mwhiting/actions-runner/_work/_tool
     strategy:
       fail-fast: false # Si un país falla, los demás continúan trabajando
+      max-parallel: 2 # Recomendado bajarlo para tu Mac
       matrix:
         # Los nombres exactos que usaremos para separar los archivos
         country: [Brasil, Mexico, Argentina, Chile, Colombia, Peru, Costa_Rica, Panama, Ecuador, Paraguay, Uruguay, Bolivia, Republica_Dominicana]
