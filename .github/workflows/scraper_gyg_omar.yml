@@ -29,8 +29,6 @@ jobs:
         run: pip install pandas requests google-cloud-bigquery[pandas] pyarrow db-dtypes
 
       - name: Ejecutar script de sitemaps y preparar BigQuery
-        env:
-          APIFY_PROXY_PASSWORD: ${{ secrets.APIFY_PROXY_PASSWORD }}
         run: python gyg/gyg_sitemap_omar_github.py
 
       - name: Subir CSVs de destinos como artefactos

@@ -1,32 +1,17 @@
 import io
-import os
 import re
 import sys
 import time
-import uuid
 import xml.etree.ElementTree as ET
 
 import pandas as pd
 import requests
 from google.cloud import bigquery
 
-# GYG bloquea las IPs de los runners de GitHub Actions. Enrutamos cada
-# request por Apify Proxy (grupo residencial) con una sesión distinta.
-APIFY_PROXY_PASSWORD = os.environ.get("APIFY_PROXY_PASSWORD")
-APIFY_PROXY_GROUPS = os.environ.get("APIFY_PROXY_GROUPS", "RESIDENTIAL")
-
-if not APIFY_PROXY_PASSWORD:
-    print("Error: Falta la variable de entorno APIFY_PROXY_PASSWORD (secret de GitHub Actions).")
-    sys.exit(1)
-
-
-def build_proxies():
-    session_id = uuid.uuid4().hex[:16]
-    proxy_url = (
-        f"http://groups-{APIFY_PROXY_GROUPS},session-{session_id}:"
-        f"{APIFY_PROXY_PASSWORD}@proxy.apify.com:8000"
-    )
-    return {"http": proxy_url, "https": proxy_url}
+# Nota: los sitemaps de GYG son públicos (pensados para bots de búsqueda) y no
+# bloquean a los runners de GitHub Actions, así que acá no hace falta Apify
+# Proxy — a diferencia de scraper_gyg_omar_github.py, que sí lo necesita para
+# la API de reviews.
 
 
 # Destinos a procesar: slug de ciudad de GYG (confirmado contra el sitemap real) → país
@@ -71,7 +56,7 @@ def fetch_sitemap(index):
     url = SITEMAP_BASE.format(index=index)
     for intento in range(1, MAX_RETRIES + 1):
         try:
-            resp = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT, proxies=build_proxies())
+            resp = requests.get(url, headers=HEADERS, timeout=REQUEST_TIMEOUT)
             resp.raise_for_status()
             root = ET.fromstring(resp.content)
             locs = [
