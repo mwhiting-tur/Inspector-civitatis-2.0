@@ -1,0 +1,228 @@
+name: Operadores Civitatis (sitio completo) -> BigQuery
+
+# Ejecución 100% manual. Recorre todos los destinos/productos de Civitatis,
+# extrae los operadores y sube a datatur.supply.operators_civitatis en lotes
+# incrementales (WRITE_APPEND). Si un shard muere o se queda sin tiempo, lo ya
+# subido queda en la tabla: relanzá el workflow con el MISMO fecha_scan y cada
+# shard reanuda donde quedó.
+
+on:
+  workflow_dispatch:
+    inputs:
+      paises:
+        description: 'Países separados por coma. Vacío = TODOS los del destinos_civitatis.json'
+        required: false
+        default: ''
+      total_shards:
+        description: 'Cantidad de shards (runners en paralelo). ~24 para el sitio completo.'
+        required: true
+        default: '24'
+      max_paralelo:
+        description: 'Cuántos shards corren a la vez'
+        required: true
+        default: '12'
+      moneda:
+        description: 'Moneda de Civitatis para precio_real (USD, CLP, EUR, ARS, BRL, COP, GBP, MXN, PEN)'
+        required: true
+        default: 'USD'
+      fecha_scan:
+        description: 'YYYY-MM-DD. Vacío = hoy (UTC). Repetí el mismo valor para REANUDAR una corrida.'
+        required: false
+        default: ''
+      batch_size:
+        description: 'Filas por lote subido a BigQuery'
+        required: true
+        default: '500'
+      max_minutos:
+        description: 'Minutos máximos de scraping por shard antes de cortar ordenado (límite GH: 360)'
+        required: true
+        default: '320'
+      concurrencia_destinos:
+        description: 'Destinos en paralelo dentro de un shard'
+        required: true
+        default: '3'
+      concurrencia_detalle:
+        description: 'Fichas de actividad en paralelo dentro de un destino'
+        required: true
+        default: '6'
+      pausa:
+        description: 'Pausa en segundos tras cada ficha. Subir a 1-2 si aparecen muchos 429.'
+        required: true
+        default: '0'
+      usar_proxy:
+        description: 'Salir por Apify Proxy residencial (secret APIFY_PROXY_PASSWORD). Civitatis bloquea las IPs de GitHub.'
+        type: boolean
+        required: true
+        default: true
+      reanudar:
+        description: 'Saltar lo ya cargado en BigQuery para ese fecha_scan'
+        type: boolean
+        required: true
+        default: true
+
+concurrency:
+  group: operadores-civitatis
+  cancel-in-progress: false
+
+jobs:
+  # ================================================================== #
+  # 1) Fija el fecha_scan común y arma la matriz de shards
+  # ================================================================== #
+  preparar:
+    runs-on: ubuntu-latest
+    outputs:
+      shards: ${{ steps.plan.outputs.shards }}
+      fecha_scan: ${{ steps.plan.outputs.fecha_scan }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Calcular fecha_scan y matriz de shards
+        id: plan
+        env:
+          TOTAL_SHARDS: ${{ inputs.total_shards }}
+          FECHA_INPUT: ${{ inputs.fecha_scan }}
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os
+          from datetime import datetime, timezone
+          n = int(os.environ["TOTAL_SHARDS"])
+          fecha = os.environ.get("FECHA_INPUT") or datetime.now(timezone.utc).strftime("%Y-%m-%d")
+          print(f"shards={json.dumps(list(range(n)))}")
+          print(f"fecha_scan={fecha}")
+          PY
+
+      - name: Mostrar reparto de destinos
+        env:
+          PAISES: ${{ inputs.paises }}
+          TOTAL_SHARDS: ${{ inputs.total_shards }}
+        run: |
+          ARGS=(--plan --total-shards "$TOTAL_SHARDS")
+          if [ -n "$PAISES" ]; then ARGS+=(--paises "$PAISES"); fi
+          {
+            echo '## 🧮 Reparto de destinos'
+            echo '```'
+            python main_operadores.py "${ARGS[@]}"
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # ================================================================== #
+  # 2) Un runner por shard. Cada uno sube sus propios lotes a BigQuery.
+  # ================================================================== #
+  scrapear:
+    needs: preparar
+    runs-on: ubuntu-22.04
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max_paralelo) }}
+      matrix:
+        shard: ${{ fromJSON(needs.preparar.outputs.shards) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Autenticar en Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install playwright pandas pyarrow "google-cloud-bigquery[pandas]" db-dtypes
+
+      - name: Instalar Chromium
+        run: python -m playwright install chromium --with-deps
+
+      - name: Scrapear shard ${{ matrix.shard }}
+        env:
+          FECHA_SCAN: ${{ needs.preparar.outputs.fecha_scan }}
+          PAISES: ${{ inputs.paises }}
+          APIFY_PROXY_PASSWORD: ${{ secrets.APIFY_PROXY_PASSWORD }}
+          APIFY_PROXY_GROUPS: RESIDENTIAL
+        run: |
+          ARGS=(
+            --shard "${{ matrix.shard }}"
+            --total-shards "${{ inputs.total_shards }}"
+            --moneda "${{ inputs.moneda }}"
+            --fecha-scan "$FECHA_SCAN"
+            --batch-size "${{ inputs.batch_size }}"
+            --max-minutos "${{ inputs.max_minutos }}"
+            --concurrencia-destinos "${{ inputs.concurrencia_destinos }}"
+            --concurrencia-detalle "${{ inputs.concurrencia_detalle }}"
+            --pausa "${{ inputs.pausa }}"
+            --progreso "progreso/operadores_shard_${{ matrix.shard }}.json"
+            --csv-respaldo "progreso/operadores_shard_${{ matrix.shard }}.csv"
+          )
+          if [ -n "$PAISES" ]; then ARGS+=(--paises "$PAISES"); fi
+          if [ "${{ inputs.reanudar }}" != "true" ]; then ARGS+=(--no-reanudar); fi
+          if [ "${{ inputs.usar_proxy }}" != "true" ]; then ARGS+=(--sin-proxy); fi
+          python main_operadores.py "${ARGS[@]}"
+
+      - name: Guardar progreso como artefacto
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: progreso-shard-${{ matrix.shard }}
+          path: progreso/
+          retention-days: 7
+          if-no-files-found: warn
+
+  # ================================================================== #
+  # 3) Resumen final contra BigQuery (corre aunque algún shard falle)
+  # ================================================================== #
+  resumen:
+    needs: [preparar, scrapear]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Autenticar en Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Instalar dependencias
+        run: pip install pandas "google-cloud-bigquery[pandas]" pyarrow db-dtypes
+
+      - name: Descargar progreso de todos los shards
+        uses: actions/download-artifact@v4
+        with:
+          pattern: progreso-shard-*
+          path: progreso_todos
+          merge-multiple: true
+
+      - name: Estado por shard
+        run: |
+          echo "## 🧭 Estado por shard" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Shard | Estado | Destinos | Actividades | Filas subidas | Lotes |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|---|---|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          python - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import glob, json
+          for ruta in sorted(glob.glob("progreso_todos/**/*.json", recursive=True),
+                             key=lambda p: json.load(open(p)).get("shard", 0)):
+              d = json.load(open(ruta))
+              print("| {} | {} | {} | {} | {} | {} |".format(
+                  d.get("shard"), d.get("estado"), d.get("destinos_asignados"),
+                  d.get("scraper_actividades", "-"), d.get("filas_subidas"), d.get("lotes_subidos")))
+          PY
+
+      - name: Totales en BigQuery
+        continue-on-error: true   # si todos los shards fallaron la tabla puede no existir
+        run: |
+          python main_operadores.py --resumen-bq \
+            --fecha-scan "${{ needs.preparar.outputs.fecha_scan }}"
