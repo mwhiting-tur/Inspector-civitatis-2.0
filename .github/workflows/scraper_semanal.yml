@@ -17,7 +17,18 @@ jobs:
 
       matrix:
         include:
-
+          - country: "Chile"
+            currency: "CLP"
+          - country: "México"
+            currency: "MXN"
+          - country: "Perú"
+            currency: "PEN"
+          - country: "Colombia"
+            currency: "COP"
+          - country: "Argentina"
+            currency: "ARS"
+          - country: "Bolivia"
+            currency: "USD"
           - country: "Brasil"
             currency: "BRL"
           - country: "Paraguay"

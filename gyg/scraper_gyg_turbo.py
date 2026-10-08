@@ -1,3 +1,6 @@
+import truststore
+truststore.inject_into_ssl()
+
 import pandas as pd
 import requests
 import time
@@ -6,14 +9,14 @@ import os
 import json
 import concurrent.futures
 import threading
-from datetime import datetime, timedelta
+from datetime import datetime
 
 # --- CONFIGURACIÓN ---
-archivo_entrada = 'gyg/tours_republica_dominicana_IDs.csv'
-archivo_salida = 'gyg/reviews_republica_dominicana_FINAL.csv'
+archivo_entrada = 'gyg/tours_colombia_IDs_2026-09-02.csv'
+archivo_salida = 'gyg/reviews_colombia_sep26_FINAL.csv'
 
 url_api_post = "https://travelers-api.getyourguide.com/user-interface/activity-details-page/blocks?ranking_uuid=8db3d7f9-ae97-4e8e-9782-086c43dd5f1b"
-hace_5_anos = datetime.now() - timedelta(days=5*365)
+anio_objetivo = 2026
 
 # TUS CABECERAS EXACTAS
 headers = {
@@ -137,15 +140,20 @@ def procesar_tour(row):
                     fecha_obj = datetime.strptime(fecha_str.split('T')[0], "%Y-%m-%d")
                 except ValueError: continue 
                 
-                if fecha_obj < hace_5_anos:
-                    continuar_paginando = False 
+                if fecha_obj.year > anio_objetivo:
+                    # Todavía no llegamos a 2026 (reviews más nuevas primero), seguimos paginando.
+                    continue
+
+                if fecha_obj.year < anio_objetivo:
+                    # Ya pasamos 2026 (reviews más viejas), cortamos la paginación.
+                    continuar_paginando = False
                     break
-                    
+
                 autor_texto = review.get('author', {}).get('title', {}).get('text', '')
                 autor_texto = autor_texto.replace(' – ', ' - ').replace(' — ', ' - ')
                 pais_usuario = autor_texto.split(' - ')[-1].strip() if ' - ' in autor_texto else "Desconocido"
                 
-                linea_csv = f"República Dominicana;{destino};{actividad};{url_act};{fecha_obj.strftime('%d/%m/%Y')};{pais_usuario}\n"
+                linea_csv = f"Colombia;{destino};{actividad};{url_act};{fecha_obj.strftime('%d/%m/%Y')};{pais_usuario}\n"
                 
                 # 🔒 USAMOS EL CERROJO PARA GUARDAR EN EL CSV DE FORMA SEGURA
                 with lock_csv:

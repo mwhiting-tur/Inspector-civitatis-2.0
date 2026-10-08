@@ -607,6 +607,10 @@ PAISES = {
 
 # ── Main ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
+    # Para correr solo un subconjunto de países, restringí este dict.
+    # Ej: PAISES_A_PROCESAR = {"Colombia": ciudades_colombia}
+    PAISES_A_PROCESAR = {"Colombia": ciudades_colombia}
+
     all_hits: list[dict] = []
 
     print(f"Descargando {len(list(SITEMAP_INDICES))} sitemaps de GYG…\n")
@@ -614,7 +618,7 @@ if __name__ == "__main__":
     for idx in SITEMAP_INDICES:
         urls = fetch_sitemap(idx)
 
-        for pais, slugs in PAISES.items():
+        for pais, slugs in PAISES_A_PROCESAR.items():
             hits = match_cities(urls, slugs, pais)
             all_hits.extend(hits)
 
@@ -640,6 +644,8 @@ if __name__ == "__main__":
             grupo.to_csv(archivo_salida, index=False, sep=";", encoding="utf-8-sig")
             print(f"  {pais}: {len(grupo):,} actividades → {archivo_salida}")
 
-        # ── Combined CSV ──
-        df.to_csv(f"gyg/tours_all_IDs_{hoy}.csv", index=False, sep=";", encoding="utf-8-sig")
-        print(f"\n📦 CSV combinado → gyg/tours_all_IDs_{hoy}.csv")
+        # ── Combined CSV (solo si se procesó más de un país, para no pisar
+        #    un "tours_all_IDs" real con una corrida parcial) ──
+        if len(PAISES_A_PROCESAR) > 1:
+            df.to_csv(f"gyg/tours_all_IDs_{hoy}.csv", index=False, sep=";", encoding="utf-8-sig")
+            print(f"\n📦 CSV combinado → gyg/tours_all_IDs_{hoy}.csv")
