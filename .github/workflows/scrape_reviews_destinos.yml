@@ -1,146 +1,242 @@
-name: Scrape Civitatis Multi-Destino Reviews
+name: Reviews Civitatis (destinos Omar) -> BigQuery
+
+# Ejecución 100% manual. Un runner por destino: lista las actividades del
+# destino, baja las opiniones dentro del rango de fechas y las sube a
+# datatur.supply.reviews_civitatis_omar en lotes incrementales (WRITE_APPEND).
+#
+# Si un destino se queda sin tiempo, lo ya subido queda en la tabla: relanzá el
+# workflow con el MISMO fecha_scan y cada destino reanuda por las actividades
+# que le falten. El resumen del run muestra, destino por destino, cuánto entró
+# y cuánto quedó pendiente.
 
 on:
   workflow_dispatch:
+    inputs:
+      destinos:
+        description: "Subconjunto separado por ';' (ej: Madrid;Roma). Vacío = los 20 configurados."
+        required: false
+        default: ''
+      fecha_desde:
+        description: 'YYYY-MM-DD. Reviews desde esta fecha.'
+        required: true
+        default: '2025-05-01'
+      fecha_hasta:
+        description: 'YYYY-MM-DD. Vacío = hoy.'
+        required: false
+        default: ''
+      fecha_scan:
+        description: 'YYYY-MM-DD. Vacío = hoy (UTC). Repetí el mismo valor para REANUDAR una corrida.'
+        required: false
+        default: ''
+      max_paralelo:
+        description: 'Destinos en paralelo. Más de 8 dispara los 429 de Civitatis.'
+        required: true
+        default: '8'
+      concurrencia:
+        description: 'Actividades en paralelo dentro de cada destino'
+        required: true
+        default: '5'
+      batch_size:
+        description: 'Reviews por lote subido a BigQuery'
+        required: true
+        default: '500'
+      max_minutos:
+        description: 'Minutos máximos de scraping por destino antes de cortar ordenado (límite GH: 360)'
+        required: true
+        default: '320'
+      reanudar:
+        description: 'Saltar las actividades ya cargadas en BigQuery para ese fecha_scan'
+        type: boolean
+        required: true
+        default: true
+
+concurrency:
+  group: reviews-civitatis-omar
+  cancel-in-progress: false
 
 jobs:
-  scrape-matrix:
-    runs-on: ubuntu-22.04
-    timeout-minutes: 360 # 6 horas máximo por nodo
-    
-    strategy:
-      fail-fast: false
-      max-parallel: 15 # Ejecuta 15 destinos simultáneamente para no colapsar los límites gratuitos de Actions
-      matrix:
-        destino: 
-          - "Ciudad de México, México"
-          - "Buenos Aires, Argentina"
-          - "Medellín, Colombia"
-          - "Río de Janeiro, Brasil"
-          - "Cartagena de Indias, Colombia"
-          - "Playa del Carmen, México"
-          - "Akumal, México"
-          - "Puerto Morelos, México"
-          - "Lima, Perú"
-          - "Punta Cana, República Dominicana"
-          - "La Habana, Cuba"
-          - "Cusco, Perú"
-          - "Tulum, México"
-          - "Cancún, México"
-          - "Salvador de Bahía, Brasil"
-          - "Santiago de Chile, Chile"
-          - "Santo Domingo, República Dominicana"
-          - "Bogotá, Colombia"
-          - "Samaná, República Dominicana"
-          - "Juan Dolio, República Dominicana"
-          - "Boca Chica, República Dominicana"
-          - "Miches, República Dominicana"
-          - "Jamao al Norte, República Dominicana"
-          - "Baní, República Dominicana"
-          - "La Vega, República Dominicana"
-          - "Ciudad de Panamá, Panamá"
-          - "Costa Mujeres, México"
-          - "Varadero, Cuba"
-          - "Guadalajara, México"
-          - "El Calafate, Argentina"
-          - "Arequipa, Perú"
-          - "Santa Marta, Colombia"
-          - "Isla Mujeres, México"
-          - "Bariloche, Argentina"
-          - "Mendoza, Argentina"
-          - "San José, Costa Rica"
-          - "Viñales, Cuba"
-          - "Sao Paulo, Brasil"
-          - "Matanzas, Cuba"
-          - "Ushuaia, Argentina"
-          - "Montevideo, Uruguay"
-          - "Salta, Argentina"
-          - "Quito, Ecuador"
-          - "San Pedro de Atacama, Chile"
-          - "Foz de Iguazú, Brasil"
-          - "Paraty, Brasil"
-          - "Puebla, México"
-          - "Mérida, México"
-          - "Oaxaca, México"
-          - "Puerto Iguazú, Argentina"
-          - "Roma, Italia"
-          - "Barcelona, España"
-          - "París, Francia"
-          - "Milán, Italia"
-          - "Lisboa, Portugal"
-          - "Londres, Reino Unido"
-          - "Nueva York, Estados Unidos"
-          - "Berlín, Alemania"
-          - "Oporto, Portugal"
-          - "Madrid, España"
-          - "Ámsterdam, Países Bajos"
-          - "Cracovia, Polonia"
-          - "Marrakech, Marruecos"
-          - "Atenas, Grecia"
-          - "Bruselas, Bélgica"
-          - "Budapest, Hungría"
-          - "Praga, República Checa"
-          - "Viena, Austria"
-          - "Nápoles, Italia"
-          - "Florencia, Italia"
-          - "Venecia, Italia"
-          - "Tokio, Japón"
-          - "Copenhague, Dinamarca"
-          - "Brujas, Bélgica"
-          - "Varsovia, Polonia"
-          - "Burdeos, Francia"
-          - "Edimburgo, Reino Unido"
-          - "Estambul, Turquía"
-          - "Dublín, Irlanda"
-          - "Gante, Bélgica"
-          - "Disneyland París, Francia"
-          - "Kioto, Japón"
-          - "Estrasburgo, Francia"
-          - "Osaka, Japón"
-          - "Marsella, Francia"
-          - "Versalles, Francia"
-          - "Estocolmo, Suecia"
-          - "San Francisco, Estados Unidos"
-          - "Dubrovnik, Croacia"
-          - "Dubái, Emiratos Árabes Unidos"
-          - "Múnich, Alemania"
-          - "Miami, Estados Unidos"
-          - "Colmar, Francia"
-          - "Bucarest, Rumanía"
-          - "Bratislava, Eslovaquia"
-          - "Toulouse, Francia"
-          - "Aveiro, Portugal"
-          - "Amberes, Bélgica"
-          - "Bangkok, Tailandia"
-          - "Sintra, Portugal"
-
+  # ================================================================== #
+  # 1) Fija el fecha_scan común y arma la matriz de destinos
+  # ================================================================== #
+  preparar:
+    runs-on: ubuntu-latest
+    outputs:
+      destinos: ${{ steps.plan.outputs.destinos }}
+      fecha_scan: ${{ steps.plan.outputs.fecha_scan }}
     steps:
-      - name: Descargar repositorio
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Instalar Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Instalar dependencias de Python
+      - name: Calcular fecha_scan y matriz de destinos
+        id: plan
+        env:
+          DESTINOS: ${{ inputs.destinos }}
+          FECHA_INPUT: ${{ inputs.fecha_scan }}
+        run: |
+          FECHA="${FECHA_INPUT:-$(date -u +%F)}"
+          echo "fecha_scan=$FECHA" >> "$GITHUB_OUTPUT"
+          echo "destinos=$(python reviews_destino.py --matriz --destinos "$DESTINOS")" >> "$GITHUB_OUTPUT"
+
+      - name: Mostrar destinos a procesar
+        env:
+          DESTINOS: ${{ inputs.destinos }}
+        run: |
+          {
+            echo "## 🗺️ Corrida \`fecha_scan = ${{ steps.plan.outputs.fecha_scan }}\`"
+            echo ""
+            echo "Rango de reviews: **${{ inputs.fecha_desde }} → ${{ inputs.fecha_hasta || 'hoy' }}**"
+            echo ""
+            echo '```'
+            python reviews_destino.py --listar-destinos --destinos "$DESTINOS"
+            echo '```'
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+  # ================================================================== #
+  # 2) Un runner por destino. Cada uno sube sus propios lotes a BigQuery.
+  # ================================================================== #
+  scrapear:
+    needs: preparar
+    runs-on: ubuntu-22.04
+    timeout-minutes: 355
+    strategy:
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max_paralelo) }}
+      matrix:
+        destino: ${{ fromJSON(needs.preparar.outputs.destinos) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Autenticar en Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Instalar dependencias
         run: |
           python -m pip install --upgrade pip
-          pip install playwright pandas
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install playwright pandas pyarrow "google-cloud-bigquery[pandas]" db-dtypes
 
-      - name: Instalar Navegador y Dependencias de Sistema
+      - name: Instalar Chromium
+        run: python -m playwright install chromium --with-deps
+
+      # El nombre del destino llega siempre por env, nunca interpolado dentro
+      # del script: trae comas, espacios y acentos.
+      - name: Nombre corto del destino
+        id: slug
+        env:
+          DESTINO: ${{ matrix.destino }}
         run: |
-          python -m playwright install chromium --with-deps
+          echo "valor=$(printf '%s' "$DESTINO" \
+            | iconv -f utf-8 -t ascii//TRANSLIT \
+            | tr '[:upper:]' '[:lower:]' \
+            | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g')" >> "$GITHUB_OUTPUT"
 
-      - name: Correr Scraper para ${{ matrix.destino }}
-        run: python -u reviews_destino.py "${{ matrix.destino }}"
+      - name: Scrapear reviews de ${{ matrix.destino }}
+        env:
+          DESTINO: ${{ matrix.destino }}
+          SLUG: ${{ steps.slug.outputs.valor }}
+          FECHA_SCAN: ${{ needs.preparar.outputs.fecha_scan }}
+          FECHA_DESDE: ${{ inputs.fecha_desde }}
+          FECHA_HASTA: ${{ inputs.fecha_hasta }}
+          BATCH_SIZE: ${{ inputs.batch_size }}
+          CONCURRENCIA: ${{ inputs.concurrencia }}
+          MAX_MINUTOS: ${{ inputs.max_minutos }}
+          REANUDAR: ${{ inputs.reanudar }}
+        run: |
+          ARGS=(
+            --destino "$DESTINO"
+            --fecha-desde "$FECHA_DESDE"
+            --fecha-scan "$FECHA_SCAN"
+            --batch-size "$BATCH_SIZE"
+            --concurrencia "$CONCURRENCIA"
+            --max-minutos "$MAX_MINUTOS"
+            --progreso "progreso/reviews_${SLUG}.json"
+            --csv-respaldo "progreso/reviews_${SLUG}.csv"
+          )
+          if [ -n "$FECHA_HASTA" ]; then ARGS+=(--fecha-hasta "$FECHA_HASTA"); fi
+          if [ "$REANUDAR" != "true" ]; then ARGS+=(--no-reanudar); fi
+          python -u reviews_destino.py "${ARGS[@]}"
 
-      - name: Subir CSV y Progreso resultante
+      - name: Guardar progreso como artefacto
+        if: always()
         uses: actions/upload-artifact@v4
-        if: always() # Asegura que se suban los archivos incluso si da timeout o error
         with:
-          name: resultados-${{ strategy.job-index }}
-          path: resultados/ # Solo sube la carpeta limpia
+          name: progreso-${{ steps.slug.outputs.valor }}
+          path: progreso/
+          retention-days: 7
           if-no-files-found: warn
 
+  # ================================================================== #
+  # 3) Resumen final contra BigQuery (corre aunque algún destino falle)
+  # ================================================================== #
+  resumen:
+    needs: [preparar, scrapear]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Autenticar en Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Instalar dependencias
+        run: pip install pandas "google-cloud-bigquery[pandas]" pyarrow db-dtypes
+
+      - name: Descargar progreso de todos los destinos
+        uses: actions/download-artifact@v4
+        with:
+          pattern: progreso-*
+          path: progreso_todos
+          merge-multiple: true
+
+      - name: Estado por destino
+        run: |
+          {
+            echo "## 🧭 Estado por destino"
+            echo ""
+            echo "| Destino | Estado | Actividades | Reviews subidas | Lotes | Bloqueos HTTP |"
+            echo "|---|---|---:|---:|---:|---:|"
+            python - <<'PY'
+          import glob, json
+          filas = []
+          for ruta in glob.glob("progreso_todos/**/*.json", recursive=True):
+              try:
+                  filas.append(json.load(open(ruta, encoding="utf-8")))
+              except Exception:
+                  pass
+          for d in sorted(filas, key=lambda x: -x.get("filas_subidas", 0)):
+              icono = {"COMPLETO": "✅", "INCOMPLETO_POR_TIEMPO": "⏱️", "ERROR": "❌"}.get(d.get("estado"), "🔄")
+              print("| {} | {} {} | {} | {:,} | {} | {} |".format(
+                  d.get("destino"), icono, d.get("estado"),
+                  d.get("scraper_actividades_scrapeadas", "-"),
+                  d.get("filas_subidas", 0), d.get("lotes_subidos", 0),
+                  d.get("scraper_http_bloqueos", "-")))
+          incompletos = [d.get("destino") for d in filas if d.get("estado") != "COMPLETO"]
+          if incompletos:
+              print()
+              print("> ⏱️ Sin terminar: **{}**. Relanzá el workflow con el mismo "
+                    "`fecha_scan` para que continúen donde quedaron.".format(", ".join(map(str, incompletos))))
+          PY
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Totales en BigQuery
+        env:
+          DESTINOS: ${{ inputs.destinos }}
+        run: |
+          python reviews_destino.py --resumen-bq \
+            --fecha-scan "${{ needs.preparar.outputs.fecha_scan }}" \
+            --destinos "$DESTINOS"
