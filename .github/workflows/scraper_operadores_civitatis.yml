@@ -42,9 +42,9 @@ on:
         required: true
         default: 'USD'
       batch_size:
-        description: 'Filas por lote a BigQuery'
+        description: 'Filas por lote a BigQuery. Chico = el avance se ve antes y se arriesga menos buffer si el job muere.'
         required: true
-        default: '500'
+        default: '200'
       max_minutos:
         description: 'Corte ordenado por shard (watchdog duro)'
         required: true
