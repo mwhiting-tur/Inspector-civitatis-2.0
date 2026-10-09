@@ -28,11 +28,12 @@ from datetime import datetime, date, timezone
 import pandas as pd
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from drivers.civitatis_operadores_full import (  # noqa: E402
-    CivitatisOperadoresScraper,
-    COLUMNAS,
-    proxy_apify,
-)
+# Sólo lo común a nivel de módulo: el motor "navegador" importa Playwright y el
+# motor "http" no, así que cada uno se carga bajo demanda en ejecutar().
+from drivers.civitatis_comun import COLUMNAS  # noqa: E402
+
+RUTA_BASELINE = "civitatis_baseline.txt"
+RUTA_CACHE_URLS = "data/urls_actividades_civitatis.txt"
 
 TABLA_DESTINO = "datatur.supply.operators_civitatis"
 RUTA_DESTINOS = "destinos_civitatis.json"
@@ -80,6 +81,86 @@ def peso(destino):
     except (TypeError, ValueError):
         actividades = 0
     return actividades + 3
+
+
+def urls_historicas_bq(tabla):
+    """url_actividad vistas en scans anteriores: la fuente más completa."""
+    try:
+        from google.cloud import bigquery
+        cli = bigquery.Client(project=tabla.split(".")[0])
+        sql = (f"SELECT DISTINCT url_actividad AS u FROM `{tabla}` "
+               f"WHERE url_actividad IS NOT NULL AND url_actividad != ''")
+        return [r["u"] for r in cli.query(sql).result()]
+    except Exception as e:
+        print(f"⚠️ No se pudo leer el histórico de {tabla} ({type(e).__name__}). Se sigue sin esa fuente.")
+        return []
+
+
+def construir_trabajos(args, paises):
+    """
+    Lista de {url, pais, destino} para el motor HTTP.
+
+    Las actividades se enumeran por sitemap porque los listados (/es/madrid/)
+    devuelven 406 a clientes sin navegador. Si el sitemap no responde se cae al
+    civitatis_baseline.txt del repo, que ya trae ~12,6k urls de actividad.
+    """
+    from drivers.civitatis_operadores_http import (
+        filtrar_actividades, urls_desde_archivo, urls_desde_sitemap,
+    )
+    from drivers.civitatis_comun import slug_de_url
+
+    if args.urls_desde and os.path.exists(args.urls_desde):
+        actividades = filtrar_actividades(urls_desde_archivo(args.urls_desde))
+        print(f"🗂️  {len(actividades)} urls de actividad leídas de {args.urls_desde}")
+    else:
+        # Tres fuentes que se complementan. El sitemap trae ~10,6k pero deja
+        # fuera más de la mitad de lo que ya conocemos: el histórico de la
+        # tabla tiene ~19,9k url_actividad distintas, de las cuales ~11,7k no
+        # figuran en el sitemap. Las que ya no existan devolverán 404 y cuestan
+        # un request.
+        fuentes = {}
+        if not args.solo_baseline:
+            fuentes["sitemap"] = filtrar_actividades(
+                urls_desde_sitemap(limite_sitemaps=args.limite_sitemaps))
+        fuentes["baseline"] = filtrar_actividades(urls_desde_archivo(RUTA_BASELINE))
+        if args.semilla_bq and not args.sin_bigquery:
+            fuentes["historico_bq"] = filtrar_actividades(urls_historicas_bq(args.tabla))
+
+        actividades = sorted(set().union(*[set(v) for v in fuentes.values()]) if fuentes else [])
+        for nombre, v in fuentes.items():
+            print(f"   fuente {nombre:<13} {len(v):>7,} urls")
+        print(f"🔎 {len(actividades):,} urls de actividad únicas")
+
+    # Cache para que los demás shards no vuelvan a pegarle al sitemap.
+    if actividades and not args.urls_desde:
+        try:
+            os.makedirs(os.path.dirname(RUTA_CACHE_URLS) or ".", exist_ok=True)
+            with open(RUTA_CACHE_URLS, "w", encoding="utf-8") as f:
+                f.write("\n".join(actividades))
+        except OSError:
+            pass
+
+    # slug de destino -> (nombre, país) desde el JSON, para que destino/pais
+    # queden escritos igual que en las filas que ya tiene la tabla.
+    mapa = {d["url"].lower(): (d["name"], d["nameCountry"]) for d in cargar_destinos(None)}
+    filtro = {_normalizar(p) for p in paises} if paises else None
+
+    trabajos, sin_destino = [], 0
+    for u in actividades:
+        slug, _ = slug_de_url(u)
+        nombre, pais = mapa.get(slug, (None, None))
+        if nombre is None:
+            sin_destino += 1
+            nombre = slug.replace("-", " ").title()
+            pais = "N/A"
+        if filtro and _normalizar(pais) not in filtro:
+            continue
+        trabajos.append({"url": u, "pais": pais, "destino": nombre})
+
+    if sin_destino:
+        print(f"ℹ️ {sin_destino} actividades cuyo slug de destino no está en "
+              f"{RUTA_DESTINOS} (se guardan con pais='N/A')")
+    return trabajos
 
 
 def repartir_en_shards(destinos, total_shards):
@@ -367,12 +448,19 @@ class Progreso:
             f.write(f"## {icono} Shard {d['shard']}/{d['total_shards']} — {d['estado']}\n\n")
             f.write("| Métrica | Valor |\n|---|---|\n")
             f.write(f"| fecha_scan | `{d['fecha_scan']}` |\n")
-            f.write(f"| Destinos asignados | {d['destinos_asignados']} |\n")
-            f.write(f"| Destinos OK | {stats.get('destinos_ok', 0)} |\n")
-            f.write(f"| Destinos sin actividades | {stats.get('destinos_vacios', 0)} |\n")
-            f.write(f"| Destinos con error | {stats.get('destinos_error', 0)} |\n")
-            f.write(f"| Actividades nuevas scrapeadas | {stats.get('actividades', 0)} |\n")
-            f.write(f"| Actividades omitidas (ya estaban) | {d['actividades_ya_cargadas_al_inicio']} |\n")
+            f.write(f"| Unidades asignadas | {d['destinos_asignados']} |\n")
+            if "fichas_ok" in stats:   # motor http
+                f.write(f"| Fichas OK | {stats.get('fichas_ok', 0)} |\n")
+                f.write(f"| Fichas con error | {stats.get('fichas_error', 0)} |\n")
+                f.write(f"| Fichas 404 | {stats.get('fichas_404', 0)} |\n")
+                f.write(f"| Sin operador declarado | {stats.get('sin_operador', 0)} |\n")
+                f.write(f"| Respuestas 429/406 | {stats.get('http_bloqueos', 0)} |\n")
+            else:                      # motor navegador
+                f.write(f"| Destinos OK | {stats.get('destinos_ok', 0)} |\n")
+                f.write(f"| Destinos sin actividades | {stats.get('destinos_vacios', 0)} |\n")
+                f.write(f"| Destinos con error | {stats.get('destinos_error', 0)} |\n")
+                f.write(f"| Actividades nuevas scrapeadas | {stats.get('actividades', 0)} |\n")
+            f.write(f"| Omitidas (ya estaban) | {d['actividades_ya_cargadas_al_inicio']} |\n")
             f.write(f"| Filas subidas a BigQuery | {d['filas_subidas']} |\n")
             f.write(f"| Lotes subidos | {d['lotes_subidos']} |\n")
             if d["estado"] == "INCOMPLETO_POR_TIEMPO":
@@ -388,31 +476,48 @@ class Progreso:
 
 async def ejecutar(args):
     fecha_iso = args.fecha_scan or datetime.now(timezone.utc).strftime("%Y-%m-%d")
-
     paises = [p.strip() for p in args.paises.split(",") if p.strip()] if args.paises else None
-    destinos = cargar_destinos(paises)
-    if not destinos:
-        print("⚠️ No hay destinos que procesar.")
-        return 0
+    http = args.motor == "http"
 
-    shards, cargas = repartir_en_shards(destinos, args.total_shards)
+    if http:
+        # Unidad de trabajo = una ficha de actividad. El reparto es round-robin
+        # porque todas cuestan prácticamente lo mismo (1 request cada una).
+        trabajos = construir_trabajos(args, paises)
+        if not trabajos:
+            print("⚠️ No hay actividades que procesar.")
+            return 0
+        if args.plan:
+            print(f"\n📊 {len(trabajos)} actividades en {args.total_shards} shards:")
+            for i in range(args.total_shards):
+                print(f"   shard {i:>3}: {len(trabajos[i::args.total_shards]):>6} fichas")
+            return 0
+        mis_items = trabajos[args.shard::args.total_shards]
+        if args.limite_destinos:
+            mis_items = mis_items[: args.limite_destinos]
+        mis_paises = {t["pais"] for t in mis_items}
+        unidad = "fichas"
+    else:
+        destinos = cargar_destinos(paises)
+        if not destinos:
+            print("⚠️ No hay destinos que procesar.")
+            return 0
+        shards, cargas = repartir_en_shards(destinos, args.total_shards)
+        if args.plan:
+            print(f"\n📊 Reparto de {len(destinos)} destinos en {args.total_shards} shards:")
+            for i, (s, c) in enumerate(zip(shards, cargas)):
+                print(f"   shard {i:>3}: {len(s):>4} destinos | peso {c:>6}")
+            print(f"\n   peso total: {sum(cargas)} | min {min(cargas)} | max {max(cargas)}")
+            return 0
+        mis_items = shards[args.shard]
+        if args.limite_destinos:
+            mis_items = mis_items[: args.limite_destinos]
+        mis_paises = {d["nameCountry"] for d in mis_items}
+        unidad = "destinos"
 
-    if args.plan:
-        print(f"\n📊 Reparto de {len(destinos)} destinos en {args.total_shards} shards:")
-        for i, (s, c) in enumerate(zip(shards, cargas)):
-            print(f"   shard {i:>3}: {len(s):>4} destinos | peso {c:>6}")
-        print(f"\n   peso total: {sum(cargas)} | min {min(cargas)} | max {max(cargas)}")
-        return 0
-
-    mis_destinos = shards[args.shard]
-    if args.limite_destinos:
-        mis_destinos = mis_destinos[: args.limite_destinos]
-
-    mis_paises = {d["nameCountry"] for d in mis_destinos}
-    print(f"\n🚀 Shard {args.shard}/{args.total_shards} | {len(mis_destinos)} destinos "
-          f"| {len(mis_paises)} países | fecha_scan={fecha_iso} | moneda={args.moneda}")
-    print(f"   Tabla destino: {args.tabla} | lote={args.batch_size} filas "
-          f"| concurrencia destinos={args.concurrencia_destinos}, fichas={args.concurrencia_detalle}")
+    print(f"\n🚀 Shard {args.shard}/{args.total_shards} | motor={args.motor} "
+          f"| {len(mis_items)} {unidad} | {len(mis_paises)} países "
+          f"| fecha_scan={fecha_iso} | moneda={args.moneda}")
+    print(f"   Tabla destino: {args.tabla} | lote={args.batch_size} filas")
 
     if args.sin_bigquery:
         cargador = CargadorCSV(args.salida_csv or f"data/operadores_shard_{args.shard}_{fecha_iso}.csv")
@@ -423,35 +528,47 @@ async def ejecutar(args):
 
     urls_omitidas = set()
     if not args.no_reanudar:
-        urls_omitidas = cargador.urls_ya_cargadas(fecha_iso, mis_paises)
+        # Con motor http el shard es round-robin sobre todas las urls, así que
+        # filtrar por país no acota nada y puede dejar fuera filas ya cargadas.
+        urls_omitidas = cargador.urls_ya_cargadas(fecha_iso, None if http else mis_paises)
 
     ruta_progreso = args.progreso or f"progreso/operadores_shard_{args.shard}.json"
     progreso = Progreso(
-        ruta_progreso, args.shard, args.total_shards, fecha_iso, len(mis_destinos), len(urls_omitidas)
+        ruta_progreso, args.shard, args.total_shards, fecha_iso, len(mis_items), len(urls_omitidas)
     )
 
     # fecha_scan ya en el tipo que pide la tabla
     fecha_valor = cargador.valor_fecha_scan(fecha_iso)
 
-    # Un session id distinto por shard => cada runner sale por una IP distinta
-    # del pool residencial, que es lo que evita el bloqueo de Civitatis.
-    proxy = None
-    if not args.sin_proxy:
-        proxy = proxy_apify(session_id=f"civop{args.shard}{fecha_iso.replace('-', '')}")
-        if proxy is None:
-            print("⚠️ Sin APIFY_PROXY_PASSWORD: se sale por la IP del runner. "
-                  "Civitatis suele responder 429/406 y el shard puede quedar incompleto.")
+    incluir_desc = "descripcion" in cargador.nombres and not args.sin_descripcion
 
-    scraper = CivitatisOperadoresScraper(
-        currency_code=args.moneda,
-        fecha_scan=fecha_valor,
-        concurrencia_destinos=args.concurrencia_destinos,
-        concurrencia_detalle=args.concurrencia_detalle,
-        incluir_descripcion="descripcion" in cargador.nombres and not args.sin_descripcion,
-        headless=not args.ver_navegador,
-        pausa_entre_fichas=args.pausa,
-        proxy=proxy,
-    )
+    if http:
+        from drivers.civitatis_operadores_http import CivitatisOperadoresHTTP
+        scraper = CivitatisOperadoresHTTP(
+            moneda=args.moneda,
+            fecha_scan=fecha_valor,
+            concurrencia=args.concurrencia,
+            pausa=args.pausa,
+            incluir_descripcion=incluir_desc,
+        )
+    else:
+        from drivers.civitatis_operadores_full import CivitatisOperadoresScraper, proxy_apify
+        proxy = None
+        if not args.sin_proxy:
+            proxy = proxy_apify(session_id=f"civop{args.shard}{fecha_iso.replace('-', '')}")
+            if proxy is None:
+                print("⚠️ Sin APIFY_PROXY_PASSWORD: se sale por la IP del runner. "
+                      "Civitatis suele responder 429/406 y el shard puede quedar incompleto.")
+        scraper = CivitatisOperadoresScraper(
+            currency_code=args.moneda,
+            fecha_scan=fecha_valor,
+            concurrencia_destinos=args.concurrencia_destinos,
+            concurrencia_detalle=args.concurrencia_detalle,
+            incluir_descripcion=incluir_desc,
+            headless=not args.ver_navegador,
+            pausa_entre_fichas=args.pausa,
+            proxy=proxy,
+        )
 
     buffer = []
     lock = asyncio.Lock()
@@ -477,7 +594,7 @@ async def ejecutar(args):
             lotes_subidos=cargador.lotes_subidos,
         )
 
-    async def on_rows(filas, destino):
+    async def on_rows(filas, destino=None):
         async with lock:
             buffer.extend(filas)
             listo = len(buffer) >= args.batch_size
@@ -488,39 +605,57 @@ async def ejecutar(args):
     estado = "COMPLETO"
     stats = {}
 
-    try:
+    async def correr():
+        if http:
+            return await scraper.run(mis_items, on_rows, urls_omitidas=urls_omitidas, deadline=deadline)
         await scraper.init_browser()
         await scraper.preparar_sesion()
-        stats = await scraper.run(mis_destinos, on_rows, urls_omitidas=urls_omitidas, deadline=deadline)
-        if scraper.detenido_por_tiempo:
+        return await scraper.run(mis_items, on_rows, urls_omitidas=urls_omitidas, deadline=deadline)
+
+    try:
+        # Watchdog duro: en la corrida del 2026-10-08 diez shards se colgaron
+        # dentro de un page.goto y el corte por tiempo nunca se evaluó, así que
+        # murieron por timeout de GitHub perdiendo el buffer en memoria. Ahora
+        # el límite se impone desde afuera, pase lo que pase adentro.
+        margen = max(60, args.max_minutos * 60 * 0.1)
+        stats = await asyncio.wait_for(correr(), timeout=args.max_minutos * 60 + margen)
+        if getattr(scraper, "detenido_por_tiempo", False):
             estado = "INCOMPLETO_POR_TIEMPO"
+    except asyncio.TimeoutError:
+        estado = "INCOMPLETO_POR_TIEMPO"
+        stats = dict(getattr(scraper, "stats", {}) or {})
+        print(f"⏱️ Watchdog: se cortó a los {args.max_minutos} min. "
+              f"Se sube lo que haya en memoria y se sale.")
     except Exception as e:
         estado = "ERROR"
+        stats = dict(getattr(scraper, "stats", {}) or {})
         print(f"❌ Error fatal: {type(e).__name__}: {e}")
         raise
     finally:
-        try:
-            await scraper.close_browser()
-        except Exception:
-            pass
+        if not http:
+            try:
+                await scraper.close_browser()
+            except Exception:
+                pass
         # Siempre se intenta subir lo que quedó en memoria.
         try:
             await flush(forzar=True)
         except Exception as e:
             print(f"❌ No se pudo subir el último lote: {type(e).__name__}: {e}")
             estado = "ERROR"
-        # Auditoría de cobertura: slugs que aparecieron en algún listado pero
-        # que no existen como destino en destinos_civitatis.json. Sus
-        # actividades no las va a scrapear nadie, así que se reportan.
-        # Contra TODOS los slugs del JSON, no sólo los del filtro --paises:
-        # si no, los destinos de otros países darían falsos positivos.
-        conocidos = {d["url"].lower() for d in cargar_destinos(None)}
-        huerfanos = {s: n for s, n in scraper.slugs_descartados.items() if s not in conocidos}
-        if huerfanos:
-            top = sorted(huerfanos.items(), key=lambda kv: -kv[1])[:30]
-            print(f"\n⚠️ {len(huerfanos)} slugs sin destino propio en el JSON "
-                  f"({sum(huerfanos.values())} tarjetas). Top: {top[:10]}")
-            progreso.actualizar(slugs_sin_destino=dict(top), slugs_sin_destino_total=len(huerfanos))
+        # Auditoría de cobertura (sólo motor navegador): slugs vistos en algún
+        # listado que no existen como destino en destinos_civitatis.json. El
+        # motor http no la necesita porque enumera por sitemap.
+        descartados = getattr(scraper, "slugs_descartados", None)
+        if descartados:
+            conocidos = {d["url"].lower() for d in cargar_destinos(None)}
+            huerfanos = {s: n for s, n in descartados.items() if s not in conocidos}
+            if huerfanos:
+                top = sorted(huerfanos.items(), key=lambda kv: -kv[1])[:30]
+                print(f"\n⚠️ {len(huerfanos)} slugs sin destino propio en el JSON "
+                      f"({sum(huerfanos.values())} tarjetas). Top: {top[:10]}")
+                progreso.actualizar(slugs_sin_destino=dict(top),
+                                    slugs_sin_destino_total=len(huerfanos))
 
         progreso.actualizar(
             estado=estado,
@@ -549,6 +684,19 @@ def parsear_args(argv):
                    help="Código de moneda de Civitatis (USD, CLP, EUR, ARS, BRL, COP, GBP, MXN, PEN).")
     p.add_argument("--tabla", default=TABLA_DESTINO, help="Tabla destino en BigQuery.")
     p.add_argument("--batch-size", type=int, default=500, help="Filas por lote subido a BigQuery.")
+    p.add_argument("--motor", choices=("http", "navegador"), default="http",
+                   help="http = 1 request por ficha, sin navegador ni proxy (recomendado). "
+                        "navegador = Playwright + Apify (legado).")
+    p.add_argument("--concurrencia", type=int, default=4,
+                   help="[motor http] fichas en paralelo.")
+    p.add_argument("--urls-desde", default=None,
+                   help="[motor http] archivo con urls en vez de consultar el sitemap.")
+    p.add_argument("--sin-semilla-bq", dest="semilla_bq", action="store_false",
+                   help="[motor http] no sembrar urls desde el histórico de la tabla.")
+    p.add_argument("--solo-baseline", action="store_true",
+                   help="[motor http] no consultar el sitemap; usar civitatis_baseline.txt.")
+    p.add_argument("--limite-sitemaps", type=int, default=None,
+                   help="[motor http] tope de sub-sitemaps a leer (pruebas).")
     p.add_argument("--concurrencia-destinos", type=int, default=3)
     p.add_argument("--concurrencia-detalle", type=int, default=6)
     p.add_argument("--pausa", type=float, default=0.0,
@@ -568,7 +716,8 @@ def parsear_args(argv):
     p.add_argument("--sin-descripcion", action="store_true", help="No extraer el texto de descripción.")
     p.add_argument("--csv-respaldo", default=None, help="Ruta de un CSV espejo de lo subido.")
     p.add_argument("--progreso", default=None, help="Ruta del JSON de progreso.")
-    p.add_argument("--limite-destinos", type=int, default=None, help="Tope de destinos (pruebas).")
+    p.add_argument("--limite-destinos", type=int, default=None,
+                   help="Tope de unidades de trabajo (destinos o fichas) para pruebas.")
     p.add_argument("--plan", action="store_true", help="Solo mostrar el reparto en shards y salir.")
     p.add_argument("--inspeccionar-tabla", action="store_true", help="Solo mostrar el schema de BigQuery y salir.")
     p.add_argument("--resumen-bq", action="store_true",
