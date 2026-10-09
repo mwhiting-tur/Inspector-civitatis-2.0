@@ -8,11 +8,11 @@ on:
   workflow_dispatch:
     inputs:
       runner:
-        description: 'Runner. self-hosted sale por IP propia (recomendado); ubuntu-latest es datacenter y Civitatis lo castiga.'
+        description: 'Runner. ubuntu-latest es IP de datacenter; self-hosted sale por IP propia pero HAY QUE TENER UNO REGISTRADO (si no, el job queda encolado para siempre).'
         type: choice
-        options: ['self-hosted', 'ubuntu-latest']
+        options: ['ubuntu-latest', 'self-hosted']
         required: true
-        default: 'self-hosted'
+        default: 'ubuntu-latest'
       fecha_scan:
         description: 'YYYY-MM-DD. Vacío = hoy (UTC). Poné la fecha de una corrida previa para CONTINUARLA.'
         required: false
