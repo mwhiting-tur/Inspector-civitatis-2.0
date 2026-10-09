@@ -1,21 +1,75 @@
-name: GYG Reviews Scraper - Destinos Omar
+name: GYG Reviews - Destinos Omar -> BigQuery
+
+# Ejecución manual. Un runner por destino: lee las actividades del sitemap,
+# baja las reviews desde fecha_desde y las sube a datatur.supply.reviews_gyg_omar
+# en lotes incrementales (WRITE_APPEND).
+#
+# SIN APIFY: el scraper sale por la IP del runner. Si GYG bloquea los runners
+# de GitHub, el mismo comando corre igual en una máquina local y reanuda donde
+# quedó (lo indica el job `resumen`).
+#
+# Relanzar con el MISMO fecha_scraper saltea los tour_id ya cargados, así que
+# repetir la corrida es barato y nunca se pierde lo ya hecho.
 
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      destinos:
+        description: "Slugs separados por espacio. Vacío = los 20. Ej: roma-l33 paris-l16"
+        required: false
+        default: ''
+      fecha_desde:
+        description: 'YYYY-MM-DD. Reviews desde esta fecha.'
+        required: true
+        default: '2025-05-01'
+      fecha_scraper:
+        description: 'YYYY-MM-DD. Vacío = hoy (UTC). Repetí el mismo valor para REANUDAR.'
+        required: false
+        default: ''
+      max_paralelo:
+        description: 'Destinos en paralelo'
+        required: true
+        default: '5'
+      concurrencia:
+        description: 'Actividades en paralelo dentro de cada destino'
+        required: true
+        default: '4'
+      batch_size:
+        description: 'Reviews por lote subido a BigQuery'
+        required: true
+        default: '2000'
+      max_minutos:
+        description: 'Minutos máximos por destino antes de cortar ordenado (límite GH: 360)'
+        required: true
+        default: '320'
+      reanudar:
+        description: 'Saltar los tour_id ya cargados para ese fecha_scraper'
+        type: boolean
+        required: true
+        default: true
+      recrear_tabla:
+        description: '⚠️ BORRA la tabla entera antes de empezar. Dejar en false para completar una corrida.'
+        type: boolean
+        required: true
+        default: false
 
+concurrency:
+  group: reviews-gyg-omar
+  cancel-in-progress: false
 
 jobs:
-  # ==========================================
-  # JOB 1: Ubicar actividades de los destinos pedidos y preparar BigQuery
-  # ==========================================
-  extract_sitemaps:
+  # ================================================================== #
+  # 1) Sitemaps: un CSV de actividades por destino + matriz
+  # ================================================================== #
+  preparar:
     runs-on: ubuntu-latest
+    outputs:
+      destinos: ${{ steps.plan.outputs.destinos }}
+      fecha_scraper: ${{ steps.plan.outputs.fecha_scraper }}
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configurar Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -25,57 +79,55 @@ jobs:
           credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
       - name: Instalar dependencias
-        run: pip install pandas requests google-cloud-bigquery[pandas] pyarrow db-dtypes
+        run: pip install pandas requests babel "google-cloud-bigquery[pandas]" pyarrow db-dtypes
 
-      - name: Ejecutar script de sitemaps y preparar BigQuery
-        run: python gyg/gyg_sitemap_omar_github.py
+      - name: Descargar sitemaps y generar CSVs por destino
+        env:
+          RECREAR: ${{ inputs.recrear_tabla }}
+        run: |
+          ARGS=()
+          if [ "$RECREAR" = "true" ]; then ARGS+=(--recrear-tabla); fi
+          python gyg/gyg_sitemap_omar_github.py "${ARGS[@]}"
 
-      - name: Subir CSVs de destinos como artefactos
+      - name: Calcular fecha_scraper y matriz
+        id: plan
+        env:
+          DESTINOS: ${{ inputs.destinos }}
+          FECHA_INPUT: ${{ inputs.fecha_scraper }}
+        run: |
+          echo "fecha_scraper=${FECHA_INPUT:-$(date -u +%F)}" >> "$GITHUB_OUTPUT"
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, os, sys
+          sys.path.insert(0, ".")
+          from gyg.gyg_sitemap_omar_github import DESTINOS
+          pedidos = os.environ.get("DESTINOS", "").split()
+          print("destinos=" + json.dumps(pedidos or list(DESTINOS)))
+          PY
+
+      - name: Subir CSVs de actividades
         uses: actions/upload-artifact@v4
         with:
           name: sitemaps_omar_data
           path: tours_urls_*.csv
           retention-days: 1
 
-  # ==========================================
-  # JOB 2: Scraper de reviews en paralelo (1 runner por destino) + carga a BigQuery
-  # ==========================================
-  extract_reviews_and_upload:
-    needs: extract_sitemaps
+  # ================================================================== #
+  # 2) Un runner por destino, carga incremental a BigQuery
+  # ================================================================== #
+  scrapear:
+    needs: preparar
     runs-on: ubuntu-latest
-    timeout-minutes: 360  # 6 horas máximo por destino (Roma/Tokio son los más grandes)
+    timeout-minutes: 355
     strategy:
-      fail-fast: false  # si un destino falla, los demás siguen
-      max-parallel: 10
+      fail-fast: false
+      max-parallel: ${{ fromJSON(inputs.max_paralelo) }}
       matrix:
-        destino:
-          - madrid-l46
-          - barcelona-l45
-          - sevilla-l48
-          - granada-l207
-          - cordoba-l1689
-          - roma-l33
-          - florencia-l32
-          - venecia-l35
-          - lisboa-l42
-          - porto-l151
-          - paris-l16
-          - londres-l57
-          - amsterdam-l36
-          - nueva-york-l59
-          - orlando-l191
-          - los-angeles-l179
-          - tokio-l193
-          - sidney-l200
-          - bangkok-l169
-          - singapur-l170
+        destino: ${{ fromJSON(needs.preparar.outputs.destinos) }}
 
     steps:
-      - name: Checkout del código
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Configurar Python
-        uses: actions/setup-python@v5
+      - uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
@@ -90,9 +142,63 @@ jobs:
           credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
 
       - name: Instalar dependencias
-        run: pip install pandas requests google-cloud-bigquery[pandas] pyarrow db-dtypes
+        run: pip install pandas requests babel "google-cloud-bigquery[pandas]" pyarrow db-dtypes
 
+      # Sin APIFY_PROXY_PASSWORD el scraper sale por la IP del runner.
       - name: Scrapear reviews de ${{ matrix.destino }}
         env:
-          APIFY_PROXY_PASSWORD: ${{ secrets.APIFY_PROXY_PASSWORD }}
-        run: python gyg/scraper_gyg_omar_github.py ${{ matrix.destino }}
+          DESTINO: ${{ matrix.destino }}
+          FECHA_SCRAPER: ${{ needs.preparar.outputs.fecha_scraper }}
+          FECHA_DESDE: ${{ inputs.fecha_desde }}
+          BATCH_SIZE: ${{ inputs.batch_size }}
+          CONCURRENCIA: ${{ inputs.concurrencia }}
+          MAX_MINUTOS: ${{ inputs.max_minutos }}
+          REANUDAR: ${{ inputs.reanudar }}
+        run: |
+          ARGS=(
+            --destino "$DESTINO"
+            --fecha-desde "$FECHA_DESDE"
+            --fecha-scraper "$FECHA_SCRAPER"
+            --batch-size "$BATCH_SIZE"
+            --concurrencia "$CONCURRENCIA"
+            --max-minutos "$MAX_MINUTOS"
+          )
+          if [ "$REANUDAR" != "true" ]; then ARGS+=(--no-reanudar); fi
+          python -u gyg/scraper_gyg_omar_github.py "${ARGS[@]}"
+
+  # ================================================================== #
+  # 3) Qué quedó cargado y qué falta (corre aunque algún destino falle)
+  # ================================================================== #
+  resumen:
+    needs: [preparar, scrapear]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Autenticar en Google Cloud
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+
+      - name: Instalar dependencias
+        run: pip install pandas requests babel "google-cloud-bigquery[pandas]" pyarrow db-dtypes
+
+      - name: Cobertura por destino
+        run: |
+          {
+            echo "## 📊 Cobertura en \`reviews_gyg_omar\`"
+            echo ""
+            echo '```'
+            python gyg/scraper_gyg_omar_github.py --listar-faltantes \
+              --fecha-scraper "${{ needs.preparar.outputs.fecha_scraper }}"
+            echo '```'
+            echo ""
+            echo "Si quedaron destinos sin datos, relanzá este workflow con el mismo"
+            echo "\`fecha_scraper\` (\`${{ needs.preparar.outputs.fecha_scraper }}\`) y"
+            echo "\`recrear_tabla = false\`. Reanuda por los \`tour_id\` que falten."
+          } | tee -a "$GITHUB_STEP_SUMMARY"

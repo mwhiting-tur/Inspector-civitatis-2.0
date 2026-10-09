@@ -25,7 +25,9 @@ DESTINOS = {
     "florencia-l32":     "Italia",
     "venecia-l35":       "Italia",
     "lisboa-l42":        "Portugal",
-    "porto-l151":        "Portugal",
+    # En GYG el slug es "oporto", no "porto": con "porto-l151" el sitemap no
+    # matcheaba nada y el destino quedaba con 0 actividades.
+    "oporto-l151":       "Portugal",
     "paris-l16":         "Francia",
     "londres-l57":       "Reino Unido",
     "amsterdam-l36":     "Países Bajos",
@@ -117,8 +119,16 @@ if __name__ == "__main__":
         df_slug.to_csv(nombre_archivo, index=False, sep=";", encoding="utf-8-sig")
         print(f"  {slug}: {len(df_slug):,} actividades → {nombre_archivo}")
 
-    # Limpiar/crear la tabla de BigQuery con el esquema correcto antes de las cargas en paralelo
-    print("\nLimpiando tabla de BigQuery (Truncate) y fijando esquema...")
+    # OJO: esto BORRA la tabla entera. Es destructivo y ya costó caro una vez:
+    # la corrida del 2026-10-08 dejó 7 destinos sin cargar, y relanzar el
+    # workflow para completarlos habría borrado los 13 que sí habían entrado.
+    # Por eso ahora hay que pedirlo explícitamente con --recrear-tabla.
+    if "--recrear-tabla" not in sys.argv:
+        print("\nℹ️ La tabla de BigQuery se deja como está (los scrapers hacen APPEND).")
+        print("   Para borrarla y recrear el esquema desde cero: --recrear-tabla")
+        sys.exit(0)
+
+    print("\n⚠️ Limpiando tabla de BigQuery (TRUNCATE) y fijando esquema...")
     table_id = "datatur.supply.reviews_gyg_omar"
     bq_client = bigquery.Client()
 

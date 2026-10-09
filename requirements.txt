@@ -8,3 +8,7 @@ pandas==2.1.3
 python-dotenv==1.0.0
 httpx==0.28.1
 truststore==0.10.4
+
+# Nombres de país en español a partir del ISO que devuelve la API de GYG
+# (gyg/scraper_gyg_omar_github.py). Sin esto, pais_usuario queda con el código.
+babel==2.17.0
