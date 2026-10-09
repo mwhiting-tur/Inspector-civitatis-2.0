@@ -25,6 +25,7 @@ import random
 import re
 import time
 import xml.etree.ElementTree as ET
+from collections import deque
 
 import httpx
 from bs4 import BeautifulSoup
@@ -41,6 +42,12 @@ from .civitatis_comun import (  # noqa: F401
 
 BASE = "https://www.civitatis.com"
 SITEMAP_INDEX = f"{BASE}/sitemap.xml"
+
+# Canario de reserva: actividad grande y estable, para cuando no hay fichas
+# previas de las que tomar una. Sin canario no se puede distinguir "catálogo
+# dado de baja" de "nos bloquearon", y confundirlos marca miles de actividades
+# vivas como inexistentes.
+CANARIO_POR_DEFECTO = f"{BASE}/es/madrid/visita-guiada-palacio-real/"
 
 CABECERAS = {
     "User-Agent": (
@@ -83,6 +90,10 @@ class DeadlineAlcanzado(Exception):
     """Se agotó el tiempo máximo asignado al scraper."""
 
 
+class BloqueoDetectado(Exception):
+    """El canario falla: Civitatis dejó de respondernos, no son fichas de baja."""
+
+
 # ====================================================================== #
 # Enumeración de actividades
 # ====================================================================== #
@@ -93,7 +104,7 @@ def _descargar(cliente, url, intentos=4, espera_base=15):
             r = cliente.get(url, timeout=45)
             if r.status_code == 200:
                 return r
-            if r.status_code in (429, 403, 406, 500, 502, 503, 504):
+            if r.status_code in (429, 403, 500, 502, 503, 504):
                 if i == intentos - 1:
                     return r
                 espera = espera_base * (2 ** i)
@@ -278,9 +289,10 @@ def parsear_ficha(html, url, pais, destino, moneda, fecha_scan,
 # ====================================================================== #
 
 class CivitatisOperadoresHTTP:
-    def __init__(self, moneda="USD", fecha_scan=None, concurrencia=4,
-                 pausa=0.3, incluir_descripcion=True, reintentos=4,
-                 backoff_base=20, timeout=45):
+    def __init__(self, moneda="USD", fecha_scan=None, concurrencia=2,
+                 pausa=1.5, incluir_descripcion=True, reintentos=4,
+                 backoff_base=20, timeout=45, canario=CANARIO_POR_DEFECTO,
+                 ventana=40, umbral_406=0.7):
         if moneda not in MONEDAS_VALIDAS:
             raise RuntimeError(f"Moneda '{moneda}' no ofrecida por Civitatis. "
                                f"Válidas: {sorted(MONEDAS_VALIDAS)}")
@@ -292,19 +304,67 @@ class CivitatisOperadoresHTTP:
         self.reintentos = reintentos
         self.backoff_base = backoff_base
         self.timeout = timeout
+        # Canario: una URL que ya scrapeamos bien. Si ella tambien devuelve 406
+        # es que nos bloquearon; si responde 200, los 406 son fichas de baja.
+        self.canario = canario or CANARIO_POR_DEFECTO
+        self.ventana = ventana
+        self.umbral_406 = umbral_406
+        self._ultimos = deque(maxlen=ventana)
+        self.bloqueado = False
+        self._lock_canario = asyncio.Lock()
 
         self._deadline = None
         self.detenido_por_tiempo = False
         self.stats = {
             "fichas_ok": 0, "fichas_error": 0, "fichas_404": 0,
-            "sin_operador": 0, "filas": 0, "http_bloqueos": 0,
-            "sin_destino_conocido": 0,
+            "no_disponibles": 0, "sin_operador": 0, "filas": 0,
+            "http_bloqueos": 0, "canario_ok": 0, "canario_fallo": 0,
         }
 
     def _chequear_deadline(self):
         if self._deadline is not None and time.monotonic() > self._deadline:
             self.detenido_por_tiempo = True
             raise DeadlineAlcanzado()
+
+    async def _canario_responde(self, cliente):
+        """True si una URL que sabemos buena sigue devolviendo 200."""
+        if not self.canario:
+            # Nunca se asume salud: sin canario no hay forma de verificar.
+            return False
+        try:
+            r = await cliente.get(self.canario, timeout=self.timeout)
+            ok = r.status_code == 200
+        except Exception:
+            ok = False
+        self.stats["canario_ok" if ok else "canario_fallo"] += 1
+        return ok
+
+    async def _registrar_resultado(self, cliente, fue_406):
+        """
+        Lleva la ventana móvil de 406. Si se dispara el umbral, consulta el
+        canario: si él también falla no son fichas de baja sino bloqueo, y se
+        aborta el shard en vez de marcar miles de actividades como inexistentes.
+        """
+        self._ultimos.append(bool(fue_406))
+        if len(self._ultimos) < self._ultimos.maxlen:
+            return
+        if sum(self._ultimos) / len(self._ultimos) < self.umbral_406:
+            return
+
+        async with self._lock_canario:
+            if self.bloqueado:
+                raise BloqueoDetectado()
+            ratio = sum(self._ultimos) / len(self._ultimos)
+            print(f"   🐤 {ratio:.0%} de 406 en las últimas {len(self._ultimos)} "
+                  f"fichas; probando el canario…", flush=True)
+            if await self._canario_responde(cliente):
+                print("   🐤 canario OK: son fichas dadas de baja, se sigue.", flush=True)
+                self._ultimos.clear()
+                return
+            self.bloqueado = True
+            print("   🛑 canario en 406: estamos bloqueados, no son bajas. "
+                  "Se corta el shard y se sube lo pendiente.", flush=True)
+            raise BloqueoDetectado()
 
     async def _pedir(self, cliente, url, saltos=0):
         """
@@ -328,6 +388,13 @@ class CivitatisOperadoresHTTP:
 
             if r.status_code == 200:
                 return 200, r.text
+            if r.status_code == 406:
+                # 406 NO es un bloqueo contra el scraper: un Chromium real
+                # recibe lo mismo en esas fichas. Es "actividad no disponible".
+                # Reintentarlo con backoff (20+40+80s) era puro desperdicio y
+                # es lo que dejó un run entero 117 min sin producir una fila.
+                # Si en realidad estamos bloqueados lo detecta el canario.
+                return 406, None
             if r.status_code in (301, 302, 307, 308):
                 destino = r.headers.get("location") or ""
                 if destino.startswith("/"):
@@ -339,7 +406,7 @@ class CivitatisOperadoresHTTP:
                 return 410, None  # redirige al destino => actividad dada de baja
             if r.status_code in (404, 410):
                 return r.status_code, None
-            if r.status_code in (429, 403, 406, 500, 502, 503, 504):
+            if r.status_code in (429, 403, 500, 502, 503, 504):
                 self.stats["http_bloqueos"] += 1
                 if i == self.reintentos - 1:
                     return r.status_code, None
@@ -376,12 +443,25 @@ class CivitatisOperadoresHTTP:
 
             async def una(trabajo):
                 async with sem:
-                    if self.detenido_por_tiempo:
+                    if self.detenido_por_tiempo or self.bloqueado:
                         return
                     try:
                         status, html = await self._pedir(cliente, trabajo["url"])
                     except DeadlineAlcanzado:
                         return
+
+                    if status == 406:
+                        # Ficha no disponible (un navegador real ve lo mismo).
+                        self.stats["no_disponibles"] += 1
+                        try:
+                            await self._registrar_resultado(cliente, True)
+                        except BloqueoDetectado:
+                            return
+                    else:
+                        try:
+                            await self._registrar_resultado(cliente, False)
+                        except BloqueoDetectado:
+                            return
 
                     if status == 200 and html:
                         filas = parsear_ficha(
@@ -398,6 +478,8 @@ class CivitatisOperadoresHTTP:
                             self.stats["fichas_error"] += 1
                     elif status in (404, 410):
                         self.stats["fichas_404"] += 1
+                    elif status == 406:
+                        pass  # ya contabilizada arriba
                     else:
                         # No se emite nada: la próxima corrida la reintenta.
                         self.stats["fichas_error"] += 1
@@ -409,8 +491,8 @@ class CivitatisOperadoresHTTP:
                     if hechas["n"] % 50 == 0 or hechas["n"] == total:
                         print(f"📈 {hechas['n']}/{total} fichas | filas={self.stats['filas']} "
                               f"| ok={self.stats['fichas_ok']} err={self.stats['fichas_error']} "
-                              f"404={self.stats['fichas_404']} bloqueos={self.stats['http_bloqueos']}",
-                              flush=True)
+                              f"404={self.stats['fichas_404']} no_disp={self.stats['no_disponibles']} "
+                              f"429={self.stats['http_bloqueos']}", flush=True)
 
             await asyncio.gather(*(una(t) for t in pendientes), return_exceptions=True)
 

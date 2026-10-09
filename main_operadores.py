@@ -443,7 +443,8 @@ class Progreso:
         if not ruta:
             return
         d = self.datos
-        icono = {"COMPLETO": "✅", "INCOMPLETO_POR_TIEMPO": "⏱️", "ERROR": "❌"}.get(d["estado"], "🔄")
+        icono = {"COMPLETO": "✅", "INCOMPLETO_POR_TIEMPO": "⏱️", "BLOQUEADO": "🛑",
+                 "ERROR": "❌"}.get(d["estado"], "🔄")
         with open(ruta, "a", encoding="utf-8") as f:
             f.write(f"## {icono} Shard {d['shard']}/{d['total_shards']} — {d['estado']}\n\n")
             f.write("| Métrica | Valor |\n|---|---|\n")
@@ -544,12 +545,18 @@ async def ejecutar(args):
 
     if http:
         from drivers.civitatis_operadores_http import CivitatisOperadoresHTTP
+        # Canario: una ficha que YA scrapeamos bien para este fecha_scan. Si
+        # ella empieza a devolver 406 es bloqueo, no bajas del catálogo.
+        from drivers.civitatis_operadores_http import CANARIO_POR_DEFECTO
+        canario = next(iter(sorted(urls_omitidas)), None) if urls_omitidas else CANARIO_POR_DEFECTO
+        print(f"🐤 Canario: {canario}")
         scraper = CivitatisOperadoresHTTP(
             moneda=args.moneda,
             fecha_scan=fecha_valor,
             concurrencia=args.concurrencia,
             pausa=args.pausa,
             incluir_descripcion=incluir_desc,
+            canario=canario,
         )
     else:
         from drivers.civitatis_operadores_full import CivitatisOperadoresScraper, proxy_apify
@@ -619,7 +626,9 @@ async def ejecutar(args):
         # el límite se impone desde afuera, pase lo que pase adentro.
         margen = max(60, args.max_minutos * 60 * 0.1)
         stats = await asyncio.wait_for(correr(), timeout=args.max_minutos * 60 + margen)
-        if getattr(scraper, "detenido_por_tiempo", False):
+        if getattr(scraper, "bloqueado", False):
+            estado = "BLOQUEADO"
+        elif getattr(scraper, "detenido_por_tiempo", False):
             estado = "INCOMPLETO_POR_TIEMPO"
     except asyncio.TimeoutError:
         estado = "INCOMPLETO_POR_TIEMPO"
@@ -687,7 +696,7 @@ def parsear_args(argv):
     p.add_argument("--motor", choices=("http", "navegador"), default="http",
                    help="http = 1 request por ficha, sin navegador ni proxy (recomendado). "
                         "navegador = Playwright + Apify (legado).")
-    p.add_argument("--concurrencia", type=int, default=4,
+    p.add_argument("--concurrencia", type=int, default=2,
                    help="[motor http] fichas en paralelo.")
     p.add_argument("--urls-desde", default=None,
                    help="[motor http] archivo con urls en vez de consultar el sitemap.")
@@ -699,7 +708,7 @@ def parsear_args(argv):
                    help="[motor http] tope de sub-sitemaps a leer (pruebas).")
     p.add_argument("--concurrencia-destinos", type=int, default=3)
     p.add_argument("--concurrencia-detalle", type=int, default=6)
-    p.add_argument("--pausa", type=float, default=0.0,
+    p.add_argument("--pausa", type=float, default=1.5,
                    help="Segundos de pausa tras cada ficha (subir si aparecen 429).")
     p.add_argument("--sin-proxy", action="store_true",
                    help="Ignorar APIFY_PROXY_PASSWORD y salir por la IP del runner.")

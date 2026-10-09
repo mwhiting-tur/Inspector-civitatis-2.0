@@ -28,11 +28,11 @@ on:
       concurrencia:
         description: 'Fichas en paralelo dentro de un shard'
         required: true
-        default: '4'
+        default: '2'
       pausa:
         description: 'Segundos entre fichas. Subir si aparecen 429.'
         required: true
-        default: '0.3'
+        default: '1.5'
       paises:
         description: 'Países separados por coma. Vacío = todos.'
         required: false
