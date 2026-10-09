@@ -2,8 +2,7 @@ name: GYG Reviews Scraper - Destinos Omar
 
 on:
   workflow_dispatch: {}
-  schedule:
-    - cron: '0 3 * * 1'   # lunes 03:00 UTC
+
 
 jobs:
   # ==========================================
