@@ -306,8 +306,16 @@ class CivitatisOperadoresHTTP:
             self.detenido_por_tiempo = True
             raise DeadlineAlcanzado()
 
-    async def _pedir(self, cliente, url):
-        """GET con backoff. Devuelve (status, texto) o (status, None)."""
+    async def _pedir(self, cliente, url, saltos=0):
+        """
+        GET con backoff. Devuelve (status, texto) o (status, None).
+
+        Una actividad dada de baja responde 301 hacia la página de su destino,
+        y esa página devuelve 406 porque los listados rechazan clientes sin
+        navegador. Si se siguiera el redirect se vería un 406 indistinguible de
+        un bloqueo y se gastarían ~140s de backoff por URL muerta. Por eso se
+        resuelven los redirects a mano: a destino => la actividad ya no existe.
+        """
         for i in range(self.reintentos):
             self._chequear_deadline()
             try:
@@ -320,6 +328,15 @@ class CivitatisOperadoresHTTP:
 
             if r.status_code == 200:
                 return 200, r.text
+            if r.status_code in (301, 302, 307, 308):
+                destino = r.headers.get("location") or ""
+                if destino.startswith("/"):
+                    destino = BASE + destino
+                _, act = slug_de_url(destino)
+                if act and saltos < 2:
+                    # Redirige a otra actividad (renombrada): se sigue un salto.
+                    return await self._pedir(cliente, destino, saltos + 1)
+                return 410, None  # redirige al destino => actividad dada de baja
             if r.status_code in (404, 410):
                 return r.status_code, None
             if r.status_code in (429, 403, 406, 500, 502, 503, 504):
@@ -354,7 +371,7 @@ class CivitatisOperadoresHTTP:
         async with httpx.AsyncClient(
             headers=CABECERAS,
             cookies={"currency": self.moneda, "civ_lang": "es"},
-            follow_redirects=True, limits=limites,
+            follow_redirects=False, limits=limites,
         ) as cliente:
 
             async def una(trabajo):
